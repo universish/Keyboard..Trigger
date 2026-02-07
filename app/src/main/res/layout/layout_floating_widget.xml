@@ -5,14 +5,13 @@
 
     <ImageView
         android:id="@+id/floating_icon"
-        android:layout_width="48dp"
-        android:layout_height="48dp"
-        android:src="@android:drawable/ic_input_add"
-        android:background="#99000000"
-        android:padding="10dp"
-        android:alpha="0.7"
+        android:layout_width="56dp"
+        android:layout_height="56dp"
+        android:src="@drawable/ic_keyboard_trigger"
+        android:alpha="0.8"
         android:clickable="true"
         android:focusable="false" 
-        android:contentDescription="Toggle Keyboard" />
+        android:contentDescription="Toggle Keyboard"
+        android:elevation="8dp"/>
         
 </FrameLayout>

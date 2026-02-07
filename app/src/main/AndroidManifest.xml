@@ -2,13 +2,17 @@
     package="com.universish.libre.keyboardtrigger">
 
     <uses-permission android:name="android.permission.SYSTEM_ALERT_WINDOW"/>
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE"/>
 
     <application
         android:allowBackup="true"
+        android:icon="@drawable/ic_keyboard_trigger"
         android:label="Keyboard Trigger"
         android:theme="@style/Theme.AppCompat.Light.NoActionBar">
 
-        <service android:name=".FloatingService" android:enabled="true"/>
+        <service android:name=".FloatingService" 
+                 android:enabled="true"
+                 android:exported="false"/>
         
         <activity android:name=".MainActivity" android:exported="true">
             <intent-filter>
