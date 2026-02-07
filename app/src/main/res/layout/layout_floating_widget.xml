@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="wrap_content"
+    android:layout_height="wrap_content">
+
+    <ImageView
+        android:id="@+id/floating_icon"
+        android:layout_width="48dp"
+        android:layout_height="48dp"
+        android:src="@android:drawable/ic_input_add"
+        android:background="#99000000"
+        android:padding="10dp"
+        android:alpha="0.7"
+        android:clickable="true"
+        android:focusable="false" 
+        android:contentDescription="Toggle Keyboard" />
+        
+</FrameLayout>
