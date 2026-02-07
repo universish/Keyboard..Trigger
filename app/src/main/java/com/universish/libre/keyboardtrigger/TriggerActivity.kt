@@ -10,7 +10,7 @@ import android.view.inputmethod.InputMethodManager
 class TriggerActivity : Activity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        // 50ms gecikmeyle klavye aç
+        
         Handler(Looper.getMainLooper()).postDelayed({
             try {
                 val imm = getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager

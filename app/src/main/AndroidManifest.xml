@@ -7,6 +7,8 @@
 
     <application
         android:label="Keyboard Trigger"
+        android:icon="@drawable/ic_launcher_icon"
+        android:roundIcon="@drawable/ic_launcher_icon"
         android:theme="@style/Theme.AppCompat.Light.NoActionBar">
 
         <service android:name=".FloatingService" 

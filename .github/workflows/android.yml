@@ -21,15 +21,13 @@ jobs:
       uses: gradle/gradle-build-action@v2
       with:
         gradle-version: 8.2
-        # Cache kapalı (Sunucu hatası önlemi)
         cache-disabled: true
         
     - name: Build with Gradle
-      # Java 17 uyuşmazlığı çözüldü, şimdi derlenmeli.
       run: gradle assembleDebug --no-build-cache --no-daemon --stacktrace
       
     - name: Upload APK
       uses: actions/upload-artifact@v4
       with:
-        name: keyboard-trigger-fixed
+        name: keyboard-trigger-ui
         path: app/build/outputs/apk/debug/app-debug.apk

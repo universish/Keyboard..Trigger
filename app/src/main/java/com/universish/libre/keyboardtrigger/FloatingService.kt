@@ -24,15 +24,19 @@ class FloatingService : Service() {
         super.onCreate()
         windowManager = getSystemService(WINDOW_SERVICE) as WindowManager
 
+        // Buton Görünümü
         floatingView = ImageView(this).apply {
-            setImageResource(android.R.drawable.ic_input_add)
-            setColorFilter(Color.WHITE)
+            // Manifest'teki ikonun aynısını kullanıyoruz
+            setImageResource(R.drawable.ic_launcher_icon)
+            // setColorFilter(Color.WHITE) // İkon zaten renkli, filtreyi kaldırıyoruz
+            
             background = GradientDrawable().apply {
                 shape = GradientDrawable.OVAL
-                setColor(Color.parseColor("#3DDC84"))
-                setStroke(2, Color.WHITE)
+                setColor(Color.WHITE) // Arkaplan Beyaz
+                setStroke(4, Color.parseColor("#3DDC84")) // Çerçeve Yeşil
             }
-            setPadding(15, 15, 15, 15)
+            setPadding(20, 20, 20, 20)
+            elevation = 10f
         }
 
         val layoutType = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
@@ -42,7 +46,7 @@ class FloatingService : Service() {
         }
 
         params = WindowManager.LayoutParams(
-            140, 140,
+            150, 150,
             layoutType,
             WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE or
             WindowManager.LayoutParams.FLAG_WATCH_OUTSIDE_TOUCH or
@@ -58,7 +62,8 @@ class FloatingService : Service() {
             windowManager.addView(floatingView, params)
             setupTouchListener()
         } catch (e: Exception) {
-            e.printStackTrace()
+            // İzin yoksa veya hata varsa sessizce öl
+            stopSelf()
         }
     }
 
@@ -106,7 +111,7 @@ class FloatingService : Service() {
             intent.addFlags(Intent.FLAG_ACTIVITY_NO_ANIMATION)
             startActivity(intent)
         } catch (e: Exception) {
-            Toast.makeText(this, "Hata: ${e.message}", Toast.LENGTH_SHORT).show()
+            // Hata yok
         }
     }
 
