@@ -17,14 +17,21 @@ jobs:
         java-version: '17'
         distribution: 'temurin'
         
-    - name: Build with Gradle (MANUAL)
-      run: |
-        # Gradle Action kullanmadan, direkt komutla
-        # Cache yok, hata yok.
-        gradle assembleDebug --no-daemon --stacktrace
+    - name: Setup Gradle
+      uses: gradle/gradle-build-action@v2
+      with:
+        gradle-version: 8.2
+        # BURASI ÇOK ÖNEMLİ: Cache'i kapattık ki sunucu hatası almayalım.
+        # Ama Action'ı kullanıyoruz ki 'gradle' komutu çalışsın.
+        cache-disabled: true
+        
+    - name: Build with Gradle
+      # --no-build-cache: Gradle'ın kendi cache'ini de kapat
+      # --no-daemon: Hafıza şişmesini önle
+      run: gradle assembleDebug --no-build-cache --no-daemon --stacktrace
       
     - name: Upload APK
       uses: actions/upload-artifact@v4
       with:
-        name: keyboard-trigger-manual
+        name: keyboard-trigger-ghost
         path: app/build/outputs/apk/debug/app-debug.apk

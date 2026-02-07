@@ -15,7 +15,7 @@ android {
         versionName "1.0"
     }
 
-    // Hata gelse bile durma, devam et
+    // Lint hatalarını yoksay (Derleme durmasın)
     lintOptions {
         abortOnError false
         checkReleaseBuilds false
