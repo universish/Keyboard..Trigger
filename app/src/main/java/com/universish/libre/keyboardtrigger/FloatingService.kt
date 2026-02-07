@@ -1,5 +1,8 @@
 package com.universish.libre.keyboardtrigger
 
+import android.app.Notification
+import android.app.NotificationChannel
+import android.app.NotificationManager
 import android.app.Service
 import android.content.Context
 import android.content.Intent
@@ -9,6 +12,7 @@ import android.os.IBinder
 import android.view.*
 import android.view.inputmethod.InputMethodManager
 import android.widget.ImageView
+import androidx.core.app.NotificationCompat
 import kotlin.math.abs
 
 class FloatingService : Service() {
@@ -22,6 +26,10 @@ class FloatingService : Service() {
 
     override fun onCreate() {
         super.onCreate()
+        
+        // KRİTİK: Servisi ölmekten kurtaran bildirim
+        startForegroundSafely()
+
         windowManager = getSystemService(WINDOW_SERVICE) as WindowManager
         floatingView = LayoutInflater.from(this).inflate(R.layout.layout_floating_widget, null)
         iconView = floatingView.findViewById(R.id.floating_icon)
@@ -45,8 +53,30 @@ class FloatingService : Service() {
         params.x = 0
         params.y = 200
 
-        windowManager.addView(floatingView, params)
-        setupTouchListener()
+        try {
+            windowManager.addView(floatingView, params)
+            setupTouchListener()
+        } catch (e: Exception) {
+            e.printStackTrace()
+        }
+    }
+
+    private fun startForegroundSafely() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            val channelId = "floating_service_channel"
+            val channelName = "Keyboard Trigger Service"
+            val chan = NotificationChannel(channelId, channelName, NotificationManager.IMPORTANCE_LOW)
+            val manager = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+            manager.createNotificationChannel(chan)
+
+            val notification: Notification = NotificationCompat.Builder(this, channelId)
+                .setContentTitle("Keyboard Trigger")
+                .setContentText("Klavye butonu aktif.")
+                .setSmallIcon(R.drawable.ic_keyboard_trigger) // İkon şart
+                .build()
+
+            startForeground(1, notification)
+        }
     }
 
     private fun setupTouchListener() {
