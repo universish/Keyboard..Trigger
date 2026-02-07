@@ -14,13 +14,13 @@ android {
         versionCode 1
         versionName "1.0"
     }
-    
-    // Derleme hatasını önleyen kritik ayar:
+
+    // KRİTİK: Derleme hatalarını (Warningleri) hata gibi görüp durdurmasın.
     lintOptions {
         abortOnError false
         checkReleaseBuilds false
     }
-
+    
     buildFeatures {
         viewBinding false
     }

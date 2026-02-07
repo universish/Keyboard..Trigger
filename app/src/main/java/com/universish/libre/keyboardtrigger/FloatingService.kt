@@ -101,10 +101,12 @@ class FloatingService : Service() {
     }
 
     private fun openGhostActivity() {
-        // Doğrudan klavye açmak yerine Hayalet Aktiviteyi çağırıyoruz
         try {
+            // Servisten Aktivite başlatmak için FLAG_ACTIVITY_NEW_TASK şarttır.
             val intent = Intent(this, TriggerActivity::class.java)
             intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+            // Animasyon olmasın
+            intent.addFlags(Intent.FLAG_ACTIVITY_NO_ANIMATION)
             startActivity(intent)
         } catch (e: Exception) {
             Toast.makeText(this, "Hata: ${e.message}", Toast.LENGTH_SHORT).show()

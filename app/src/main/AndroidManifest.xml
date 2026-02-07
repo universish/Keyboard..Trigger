@@ -22,8 +22,8 @@
 
         <activity android:name=".TriggerActivity"
                   android:theme="@android:style/Theme.Translucent.NoTitleBar"
-                  android:taskAffinity=""
                   android:excludeFromRecents="true"
+                  android:taskAffinity=""
                   android:launchMode="singleInstance"
                   android:exported="false" />
     </application>
