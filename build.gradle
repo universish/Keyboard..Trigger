@@ -9,9 +9,5 @@ buildscript {
         classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlin_version"
     }
 }
-allprojects {
-    repositories {
-        google()
-        mavenCentral()
-    }
-}
+// HATA ÇIKARAN 'allprojects' KISMI SİLİNDİ.
+// Artık depolar settings.gradle üzerinden yönetilecek.
