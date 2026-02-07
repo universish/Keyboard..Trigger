@@ -24,7 +24,6 @@ class FloatingService : Service() {
         super.onCreate()
         windowManager = getSystemService(WINDOW_SERVICE) as WindowManager
 
-        // Butonu Oluştur
         floatingView = ImageView(this).apply {
             setImageResource(android.R.drawable.ic_input_add)
             setColorFilter(Color.WHITE)
@@ -102,10 +101,8 @@ class FloatingService : Service() {
 
     private fun openGhostActivity() {
         try {
-            // Servisten Aktivite başlatmak için FLAG_ACTIVITY_NEW_TASK şarttır.
             val intent = Intent(this, TriggerActivity::class.java)
             intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-            // Animasyon olmasın
             intent.addFlags(Intent.FLAG_ACTIVITY_NO_ANIMATION)
             startActivity(intent)
         } catch (e: Exception) {
