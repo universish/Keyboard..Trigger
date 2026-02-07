@@ -11,7 +11,8 @@ class TriggerActivity : Activity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         
-        // 50ms gecikmeli tetikleme (Focus otursun diye)
+        // 1. Aktivite açıldı (Görünmez)
+        // 2. 50ms sonra klavyeyi zorla aç
         Handler(Looper.getMainLooper()).postDelayed({
             try {
                 val imm = getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager
@@ -19,7 +20,9 @@ class TriggerActivity : Activity() {
             } catch(e: Exception) {
                 e.printStackTrace()
             }
+            // 3. Kendini yok et
             finish()
+            // 4. Kapanış animasyonunu sil (titreme olmasın)
             overridePendingTransition(0, 0)
         }, 50)
     }
