@@ -19,5 +19,12 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
+
+        <activity android:name=".TriggerActivity"
+                  android:theme="@android:style/Theme.Translucent.NoTitleBar"
+                  android:taskAffinity=""
+                  android:excludeFromRecents="true"
+                  android:launchMode="singleInstance"
+                  android:exported="false" />
     </application>
 </manifest>

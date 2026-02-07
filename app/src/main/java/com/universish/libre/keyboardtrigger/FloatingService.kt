@@ -1,7 +1,6 @@
 package com.universish.libre.keyboardtrigger
 
 import android.app.Service
-import android.content.Context
 import android.content.Intent
 import android.graphics.Color
 import android.graphics.PixelFormat
@@ -9,7 +8,6 @@ import android.graphics.drawable.GradientDrawable
 import android.os.Build
 import android.os.IBinder
 import android.view.*
-import android.view.inputmethod.InputMethodManager
 import android.widget.ImageView
 import android.widget.Toast
 import kotlin.math.abs
@@ -26,19 +24,18 @@ class FloatingService : Service() {
         super.onCreate()
         windowManager = getSystemService(WINDOW_SERVICE) as WindowManager
 
-        // 1. Butonu Kodla Oluştur (XML Yok)
+        // Butonu Oluştur
         floatingView = ImageView(this).apply {
             setImageResource(android.R.drawable.ic_input_add)
             setColorFilter(Color.WHITE)
             background = GradientDrawable().apply {
                 shape = GradientDrawable.OVAL
-                setColor(Color.parseColor("#3DDC84")) // Yeşil
+                setColor(Color.parseColor("#3DDC84"))
                 setStroke(2, Color.WHITE)
             }
             setPadding(15, 15, 15, 15)
         }
 
-        // 2. Pencere Ayarları
         val layoutType = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             WindowManager.LayoutParams.TYPE_APPLICATION_OVERLAY
         } else {
@@ -92,10 +89,8 @@ class FloatingService : Service() {
                     MotionEvent.ACTION_UP -> {
                         val xDiff = abs(event.rawX - initialTouchX)
                         val yDiff = abs(event.rawY - initialTouchY)
-                        
-                        // Sürükleme değilse TIKLAMA olarak kabul et
                         if (xDiff < clickThreshold && yDiff < clickThreshold) {
-                            toggleKeyboard()
+                            openGhostActivity()
                         }
                         return true
                     }
@@ -105,15 +100,15 @@ class FloatingService : Service() {
         })
     }
 
-    private fun toggleKeyboard() {
-        // Tıklama olduğunda kullanıcıya bildirim ver (Toast)
-        // Eğer bu yazı çıkıyorsa tıklama algılanıyor demektir.
-        Toast.makeText(applicationContext, "Klavye Tetiklendi", Toast.LENGTH_SHORT).show()
-
-        // Klavye açma kodu (Zorlama Modu)
-        val imm = getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager
-        // SHOW_FORCED (2) ve 0 bayrağı
-        imm.toggleSoftInput(InputMethodManager.SHOW_FORCED, 0)
+    private fun openGhostActivity() {
+        // Doğrudan klavye açmak yerine Hayalet Aktiviteyi çağırıyoruz
+        try {
+            val intent = Intent(this, TriggerActivity::class.java)
+            intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+            startActivity(intent)
+        } catch (e: Exception) {
+            Toast.makeText(this, "Hata: ${e.message}", Toast.LENGTH_SHORT).show()
+        }
     }
 
     override fun onDestroy() {
