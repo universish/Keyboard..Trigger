@@ -15,7 +15,17 @@ android {
         versionName "1.0"
     }
 
-    // Lint hatalarını yoksay (Derleme durmasın)
+    // --- İŞTE ÇÖZÜM BURADA ---
+    // Hem Java'yı hem Kotlin'i Java 17'ye zorluyoruz.
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_17
+        targetCompatibility JavaVersion.VERSION_17
+    }
+    kotlinOptions {
+        jvmTarget = '17'
+    }
+    // -------------------------
+
     lintOptions {
         abortOnError false
         checkReleaseBuilds false

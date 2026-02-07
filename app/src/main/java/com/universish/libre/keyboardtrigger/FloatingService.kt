@@ -24,7 +24,6 @@ class FloatingService : Service() {
         super.onCreate()
         windowManager = getSystemService(WINDOW_SERVICE) as WindowManager
 
-        // Buton Tasarımı
         floatingView = ImageView(this).apply {
             setImageResource(android.R.drawable.ic_input_add)
             setColorFilter(Color.WHITE)
@@ -90,7 +89,6 @@ class FloatingService : Service() {
                         val xDiff = abs(event.rawX - initialTouchX)
                         val yDiff = abs(event.rawY - initialTouchY)
                         if (xDiff < clickThreshold && yDiff < clickThreshold) {
-                            // Tıklama algılandı -> Hayalet Aktiviteyi çağır
                             openGhostActivity()
                         }
                         return true
@@ -103,7 +101,6 @@ class FloatingService : Service() {
 
     private fun openGhostActivity() {
         try {
-            // Servis içinden Aktivite başlatmak için FLAG_ACTIVITY_NEW_TASK şarttır.
             val intent = Intent(this, TriggerActivity::class.java)
             intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
             intent.addFlags(Intent.FLAG_ACTIVITY_NO_ANIMATION)

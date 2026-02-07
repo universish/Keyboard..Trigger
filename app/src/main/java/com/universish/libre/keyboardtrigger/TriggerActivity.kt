@@ -10,10 +10,7 @@ import android.view.inputmethod.InputMethodManager
 class TriggerActivity : Activity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        
-        // 1. Aktivite açıldı (Kullanıcı görmüyor çünkü Translucent tema)
-        
-        // 2. 100ms gecikme ile klavyeyi çağır (Sistemin pencereyi algılaması için)
+        // 50ms gecikmeyle klavye aç
         Handler(Looper.getMainLooper()).postDelayed({
             try {
                 val imm = getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager
@@ -21,12 +18,8 @@ class TriggerActivity : Activity() {
             } catch(e: Exception) {
                 e.printStackTrace()
             }
-            
-            // 3. Görev tamamlandı, kendini yok et.
             finish()
-            
-            // 4. Kapanış animasyonunu iptal et (Titreme olmasın)
             overridePendingTransition(0, 0)
-        }, 100)
+        }, 50)
     }
 }
