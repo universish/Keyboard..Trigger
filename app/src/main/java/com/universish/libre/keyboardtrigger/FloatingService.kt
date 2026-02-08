@@ -1,79 +1,71 @@
 package com.universish.libre.keyboardtrigger
 
 import android.app.Service
+import android.content.Context
 import android.content.Intent
 import android.graphics.Color
 import android.graphics.PixelFormat
-import android.graphics.drawable.GradientDrawable
 import android.os.Build
 import android.os.IBinder
-import android.view.*
-import android.widget.ImageView
-import android.widget.Toast
-import kotlin.math.abs
+import android.view.Gravity
+import android.view.MotionEvent
+import android.view.View
+import android.view.WindowManager
+import android.view.inputmethod.InputMethodManager
+import android.widget.TextView
 
 class FloatingService : Service() {
 
     private lateinit var windowManager: WindowManager
-    private lateinit var floatingView: ImageView
+    private lateinit var floatingButton: TextView
     private lateinit var params: WindowManager.LayoutParams
 
-    override fun onBind(intent: Intent?): IBinder? { return null }
+    override fun onBind(intent: Intent?): IBinder? {
+        return null
+    }
 
     override fun onCreate() {
         super.onCreate()
+
         windowManager = getSystemService(WINDOW_SERVICE) as WindowManager
 
-        // Buton Görünümü
-        floatingView = ImageView(this).apply {
-            // Manifest'teki ikonun aynısını kullanıyoruz
-            setImageResource(R.drawable.ic_launcher_icon)
-            // setColorFilter(Color.WHITE) // İkon zaten renkli, filtreyi kaldırıyoruz
-            
-            background = GradientDrawable().apply {
-                shape = GradientDrawable.OVAL
-                setColor(Color.WHITE) // Arkaplan Beyaz
-                setStroke(4, Color.parseColor("#3DDC84")) // Çerçeve Yeşil
-            }
-            setPadding(20, 20, 20, 20)
-            elevation = 10f
+        floatingButton = TextView(this).apply {
+            text = "▲" 
+            textSize = 14f 
+            setTextColor(Color.parseColor("#006400")) 
+            gravity = Gravity.CENTER 
+            setBackgroundColor(Color.parseColor("#33000000"))
+            setPadding(0, 0, 0, 0)
         }
 
-        val layoutType = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+        val layoutFlag = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             WindowManager.LayoutParams.TYPE_APPLICATION_OVERLAY
         } else {
             WindowManager.LayoutParams.TYPE_PHONE
         }
 
         params = WindowManager.LayoutParams(
-            150, 150,
-            layoutType,
+            80,  
+            140, 
+            layoutFlag,
             WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE or
-            WindowManager.LayoutParams.FLAG_WATCH_OUTSIDE_TOUCH or
-            WindowManager.LayoutParams.FLAG_LAYOUT_NO_LIMITS,
+                    WindowManager.LayoutParams.FLAG_WATCH_OUTSIDE_TOUCH,
             PixelFormat.TRANSLUCENT
         )
 
         params.gravity = Gravity.TOP or Gravity.START
         params.x = 0
-        params.y = 200
+        params.y = 100
 
-        try {
-            windowManager.addView(floatingView, params)
-            setupTouchListener()
-        } catch (e: Exception) {
-            // İzin yoksa veya hata varsa sessizce öl
-            stopSelf()
+        floatingButton.setOnClickListener {
+            triggerKeyboard()
         }
-    }
 
-    private fun setupTouchListener() {
-        floatingView.setOnTouchListener(object : View.OnTouchListener {
+        floatingButton.setOnTouchListener(object : View.OnTouchListener {
             private var initialX = 0
             private var initialY = 0
             private var initialTouchX = 0f
             private var initialTouchY = 0f
-            private val clickThreshold = 10
 
             override fun onTouch(v: View, event: MotionEvent): Boolean {
                 when (event.action) {
@@ -87,14 +79,12 @@ class FloatingService : Service() {
                     MotionEvent.ACTION_MOVE -> {
                         params.x = initialX + (event.rawX - initialTouchX).toInt()
                         params.y = initialY + (event.rawY - initialTouchY).toInt()
-                        windowManager.updateViewLayout(floatingView, params)
+                        windowManager.updateViewLayout(floatingButton, params)
                         return true
                     }
                     MotionEvent.ACTION_UP -> {
-                        val xDiff = abs(event.rawX - initialTouchX)
-                        val yDiff = abs(event.rawY - initialTouchY)
-                        if (xDiff < clickThreshold && yDiff < clickThreshold) {
-                            openGhostActivity()
+                        if (Math.abs(event.rawX - initialTouchX) < 10 && Math.abs(event.rawY - initialTouchY) < 10) {
+                            v.performClick()
                         }
                         return true
                     }
@@ -102,21 +92,19 @@ class FloatingService : Service() {
                 return false
             }
         })
+
+        windowManager.addView(floatingButton, params)
     }
 
-    private fun openGhostActivity() {
-        try {
-            val intent = Intent(this, TriggerActivity::class.java)
-            intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-            intent.addFlags(Intent.FLAG_ACTIVITY_NO_ANIMATION)
-            startActivity(intent)
-        } catch (e: Exception) {
-            // Hata yok
-        }
+    private fun triggerKeyboard() {
+        val imm = getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager
+        imm.toggleSoftInput(InputMethodManager.SHOW_FORCED, 0)
     }
 
     override fun onDestroy() {
         super.onDestroy()
-        if (::floatingView.isInitialized) windowManager.removeView(floatingView)
+        if (::floatingButton.isInitialized) {
+            windowManager.removeView(floatingButton)
+        }
     }
 }

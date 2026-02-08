@@ -14,19 +14,13 @@ android {
         versionCode 2
         versionName "2.0"
     }
-
-    // Java 17 Zorunluluğu
+    
     compileOptions {
         sourceCompatibility JavaVersion.VERSION_17
         targetCompatibility JavaVersion.VERSION_17
     }
     kotlinOptions {
         jvmTarget = '17'
-    }
-
-    lintOptions {
-        abortOnError false
-        checkReleaseBuilds false
     }
     
     buildFeatures {
