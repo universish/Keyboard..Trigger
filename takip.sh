@@ -5,50 +5,55 @@ HEDEF_KLASOR="/storage/emulated/0/Download/MyProjects"
 APK_ISMI="KeyboardTrigger_Final.apk"
 GECICI_KLASOR="temp_apk_indir"
 
-echo "👀 GitHub Kontrol Ediliyor..."
+echo "👀 GitHub üzerinde derleme izleniyor..."
+echo "-------------------------------------"
 
-# 1. Önce devam eden işlem var mı diye bak
+# 1. Derlemeyi İzle (Hata varsa dur)
 gh run watch --exit-status
 
-# NOT: 'watch' komutu işlem yoksa hata kodu döndürür, ama bu bir sorun değil.
-# Biz her durumda indirmeyi deneyeceğiz.
-
-echo "⬇️ En son başarılı APK indiriliyor..."
-
-# 2. Temizlik
-rm -rf "$GECICI_KLASOR"
-mkdir -p "$GECICI_KLASOR"
-
-# 3. İndir (Ne varsa getir)
-gh run download --dir "$GECICI_KLASOR"
-
-# 4. APK Kontrolü
-APK_BULUNDU=$(find "$GECICI_KLASOR" -name "*.apk" -print -quit)
-
-if [ -n "$APK_BULUNDU" ]; then
-    echo "✅ APK BULUNDU!"
+if [ $? -eq 0 ]; then
+    echo "✅ DERLEME BAŞARILI! Dosya indiriliyor..."
     
-    # Hedefe Taşı
-    mv "$APK_BULUNDU" "$HEDEF_KLASOR/$APK_ISMI"
-    
-    # Temizlik
+    # 2. Temizlik Yap (Eski kalıntıları sil)
     rm -rf "$GECICI_KLASOR"
+    mkdir -p "$GECICI_KLASOR"
     
-    echo "---------------------------------------------------"
-    echo "🎉 APK HAZIR: $HEDEF_KLASOR/$APK_ISMI"
-    echo "👉 Dosya Yöneticisinden kur."
-    echo "---------------------------------------------------"
+    # 3. Dosyaları Geçici Klasöre İndir (İsim sormadan ne varsa indirir)
+    # --dir parametresi ile dosyayı nereye koyacağını biz emrediyoruz.
+    gh run download --dir "$GECICI_KLASOR"
     
-    echo "⚠️ LOG KAYDI BAŞLATILIYOR (Durdurmak için CTRL+C)..."
-    echo "Lütfen uygulamayı aç, butona bas ve hataları izle."
-    echo "3 saniye içinde başlıyor..."
-    sleep 3
+    echo "📦 Dosyalar taraniyor..."
+
+    # 4. APK Dosyasını BUL ve TAŞI (En Kritik Adım)
+    # find komutu o klasörün altındaki tüm delikleri arar, apk'yı bulur.
+    APK_BULUNDU=$(find "$GECICI_KLASOR" -name "*.apk" -print -quit)
     
-    # Logları temizle ve başlat
-    logcat -c && logcat -v time -s "FloatingService" "AndroidRuntime" "System.err"
+    if [ -n "$APK_BULUNDU" ]; then
+        echo "🎯 APK Bulundu: $APK_BULUNDU"
+        mv "$APK_BULUNDU" "$HEDEF_KLASOR/$APK_ISMI"
+        
+        echo "---------------------------------------------------"
+        echo "🎉 İŞLEM TAMAM! APK ŞURADA:"
+        echo "📂 $HEDEF_KLASOR/$APK_ISMI"
+        echo "---------------------------------------------------"
+        
+        # Geçici klasörü sil
+        rm -rf "$GECICI_KLASOR"
+        
+        echo "⚠️ Şimdi Dosya Yöneticisinden APK'yı kur."
+        echo "Logları izlemek için ENTER'a bas (Çıkış: CTRL+C)"
+        read
+        
+        # 5. Logları Başlat
+        echo "🕵️‍♂️ LOG KAYDI BAŞLIYOR..."
+        logcat -c && logcat -v time -s "FloatingService" "AndroidRuntime" "System.err"
+    else
+        echo "❌ HATA: İndirilenlerin içinde .apk dosyası bulunamadı!"
+        ls -R "$GECICI_KLASOR"
+    fi
 
 else
-    echo "❌ HATA: APK İndirilemedi veya Derleme Başarısız Oldu."
-    echo "Sebep: Derleme hatası olabilir. Loglara bakılıyor:"
+    echo "❌ DERLEME HATASI OLUŞTU!"
+    echo "Loglara bakılıyor..."
     gh run view --log-failed
 fi
