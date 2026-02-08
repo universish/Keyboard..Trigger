@@ -112,7 +112,9 @@ class FloatingService : Service() {
 
         floatingButton.setOnClickListener {
             try {
-                triggerKeyboard()
+                val intent = Intent(this, TriggerActivity::class.java)
+                intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                startActivity(intent)
             } catch (e: Exception) {
                 hatayiDosyayaYaz(e)
                 Toast.makeText(this, "Klavye hatası!", Toast.LENGTH_SHORT).show()
