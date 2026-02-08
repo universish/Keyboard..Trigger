@@ -33,24 +33,22 @@ class FloatingService : Service() {
         super.onCreate()
 
         windowManager = getSystemService(WINDOW_SERVICE) as WindowManager
-        
-        // Ekran genişliğini al (Mıknatıs hesabı için lazım)
         screenWidth = Resources.getSystem().displayMetrics.widthPixels
 
-        // --- TASARIM GÜNCELLEMESİ ---
         floatingButton = TextView(this).apply {
-            text = "^" // İnce ok işareti (Şapka)
-            textSize = 24f 
-            setTypeface(null, Typeface.BOLD) // Kalın yazı
-            setTextColor(Color.BLACK) // Siyah Yazı
+            // İSTEK: Kuyruklu Ok (Bold Up Arrow)
+            text = "⬆" 
+            textSize = 22f 
+            setTypeface(null, Typeface.BOLD)
+            setTextColor(Color.BLACK)
             gravity = Gravity.CENTER
             
-            // Arka Plan: Yarı Saydam SARI ve Köşeleri Yuvarlak
+            // Arka Plan: Yarı Saydam SARI (#99FFEB3B)
             val shape = GradientDrawable()
             shape.shape = GradientDrawable.RECTANGLE
-            shape.cornerRadius = 15f // Hafif yumuşak köşeler
-            shape.setColor(Color.parseColor("#99FFEB3B")) // Şeffaf Sarı
-            shape.setStroke(2, Color.parseColor("#FFC107")) // İnce turuncu kenarlık
+            shape.cornerRadius = 15f
+            shape.setColor(Color.parseColor("#99FFEB3B"))
+            shape.setStroke(2, Color.parseColor("#FFC107"))
             background = shape
         }
 
@@ -61,16 +59,14 @@ class FloatingService : Service() {
         }
 
         params = WindowManager.LayoutParams(
-            100, // Genişlik biraz arttı (rahat basılsın diye)
-            120, // Yükseklik
+            100,
+            140, // Biraz daha uzun olsun ki ok sığsın
             layoutFlag,
-            // FLAG_NOT_FOCUSABLE: Odaklanma sorunu ve dalgalanma için şart
             WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE or
                     WindowManager.LayoutParams.FLAG_WATCH_OUTSIDE_TOUCH,
             PixelFormat.TRANSLUCENT
         )
 
-        // Başlangıç konumu (Sağ kenar)
         params.gravity = Gravity.TOP or Gravity.START
         params.x = screenWidth - 100
         params.y = 300
@@ -79,7 +75,6 @@ class FloatingService : Service() {
             triggerKeyboard()
         }
 
-        // --- MIKNATIS VE SÜRÜKLEME MANTIĞI ---
         floatingButton.setOnTouchListener(object : View.OnTouchListener {
             private var initialX = 0
             private var initialY = 0
@@ -100,8 +95,6 @@ class FloatingService : Service() {
                     MotionEvent.ACTION_MOVE -> {
                         val dx = (event.rawX - initialTouchX).toInt()
                         val dy = (event.rawY - initialTouchY).toInt()
-                        
-                        // Ufak titremeleri sürükleme sayma
                         if (abs(dx) > 10 || abs(dy) > 10) {
                             isDragging = true
                             params.x = initialX + dx
@@ -114,12 +107,11 @@ class FloatingService : Service() {
                         if (!isDragging) {
                             v.performClick()
                         } else {
-                            // MIKNATIS: Bırakınca en yakın kenara yapış
                             val middle = screenWidth / 2
                             if (params.x >= middle) {
-                                params.x = screenWidth - 100 // Sağa yapış
+                                params.x = screenWidth - 100
                             } else {
-                                params.x = 0 // Sola yapış
+                                params.x = 0
                             }
                             windowManager.updateViewLayout(floatingButton, params)
                         }
@@ -140,10 +132,8 @@ class FloatingService : Service() {
     private fun triggerKeyboard() {
         try {
             val imm = getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager
-            // 1. Yöntem: Zorla Aç
             imm.toggleSoftInput(InputMethodManager.SHOW_FORCED, 0)
         } catch (e: Exception) {
-            // Hata olursa sessizce yut, uygulama çökmesin
             e.printStackTrace()
         }
     }
@@ -154,7 +144,6 @@ class FloatingService : Service() {
             try {
                 windowManager.removeView(floatingButton)
             } catch (e: Exception) {
-                // Zaten silindiyse sorun yok
             }
         }
     }
