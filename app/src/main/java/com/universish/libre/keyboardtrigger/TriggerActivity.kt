@@ -7,6 +7,7 @@ import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
 import android.view.inputmethod.InputMethodManager
+import android.view.View
 import android.widget.EditText
 import android.widget.LinearLayout
 
@@ -19,6 +20,7 @@ class TriggerActivity : Activity() {
             setBackgroundColor(Color.TRANSPARENT)
             isFocusable = true
             isFocusableInTouchMode = true
+            visibility = View.INVISIBLE // Görünmez yap
         }
         
         val layout = LinearLayout(this).apply {
@@ -32,12 +34,12 @@ class TriggerActivity : Activity() {
             try {
                 editText.requestFocus()
                 val imm = getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager
-                imm.showSoftInput(editText, InputMethodManager.SHOW_FORCED)
+                imm.showSoftInput(editText, InputMethodManager.SHOW_IMPLICIT)
             } catch(e: Exception) {
                 e.printStackTrace()
             }
             finish()
             overridePendingTransition(0, 0)
-        }, 50)
+        }, 100)
     }
 }
