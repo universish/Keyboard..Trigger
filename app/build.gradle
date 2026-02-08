@@ -26,6 +26,15 @@ android {
     buildFeatures {
         viewBinding false
     }
+
+    buildTypes {
+        debug {
+            debuggable true
+        }
+        release {
+            debuggable true // TEST için, prod'da false yapmayı unutma!
+        }
+    }
 }
 
 dependencies {
