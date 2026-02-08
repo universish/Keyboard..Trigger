@@ -9,6 +9,7 @@ import android.graphics.PixelFormat
 import android.graphics.Typeface
 import android.graphics.drawable.GradientDrawable
 import android.os.Build
+import android.os.Environment
 import android.os.IBinder
 import android.view.Gravity
 import android.view.MotionEvent
@@ -16,6 +17,11 @@ import android.view.View
 import android.view.WindowManager
 import android.view.inputmethod.InputMethodManager
 import android.widget.TextView
+import android.widget.Toast
+import java.io.File
+import java.io.FileWriter
+import java.io.PrintWriter
+import java.io.StringWriter
 import kotlin.math.abs
 
 class FloatingService : Service() {
@@ -25,6 +31,26 @@ class FloatingService : Service() {
     private lateinit var params: WindowManager.LayoutParams
     private var screenWidth = 0
 
+    // --- HATA RAPORLAMA FONKSİYONU ---
+    private fun hatayiDosyayaYaz(e: Throwable) {
+        try {
+            val sw = StringWriter()
+            e.printStackTrace(PrintWriter(sw))
+            val hataMesaji = sw.toString()
+
+            // Dosya: Download/MyProjects/HATA_RAPORU.txt
+            val dosyaYolu = File("/storage/emulated/0/Download/MyProjects/HATA_RAPORU.txt")
+            val writer = FileWriter(dosyaYolu, true) // true = sona ekle
+            writer.append("\n--- YENİ HATA ---\n")
+            writer.append(hataMesaji)
+            writer.append("\n------------------\n")
+            writer.flush()
+            writer.close()
+        } catch (ex: Exception) {
+            // Hata yazarken hata çıkarsa yapacak bir şey yok
+        }
+    }
+
     override fun onBind(intent: Intent?): IBinder? {
         return null
     }
@@ -32,18 +58,31 @@ class FloatingService : Service() {
     override fun onCreate() {
         super.onCreate()
 
+        // GLOBAL HATA YAKALAYICI
+        Thread.setDefaultUncaughtExceptionHandler { thread, e ->
+            hatayiDosyayaYaz(e)
+            stopSelf() // Servisi öldür
+        }
+
+        try {
+            baslat()
+        } catch (e: Exception) {
+            hatayiDosyayaYaz(e)
+            Toast.makeText(this, "HATA OLUŞTU! Dosyaya yazıldı.", Toast.LENGTH_LONG).show()
+        }
+    }
+
+    private fun baslat() {
         windowManager = getSystemService(WINDOW_SERVICE) as WindowManager
         screenWidth = Resources.getSystem().displayMetrics.widthPixels
 
         floatingButton = TextView(this).apply {
-            // İSTEK: Kuyruklu Ok (Bold Up Arrow)
             text = "⬆" 
             textSize = 22f 
             setTypeface(null, Typeface.BOLD)
             setTextColor(Color.BLACK)
             gravity = Gravity.CENTER
             
-            // Arka Plan: Yarı Saydam SARI (#99FFEB3B)
             val shape = GradientDrawable()
             shape.shape = GradientDrawable.RECTANGLE
             shape.cornerRadius = 15f
@@ -60,7 +99,7 @@ class FloatingService : Service() {
 
         params = WindowManager.LayoutParams(
             100,
-            140, // Biraz daha uzun olsun ki ok sığsın
+            140,
             layoutFlag,
             WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE or
                     WindowManager.LayoutParams.FLAG_WATCH_OUTSIDE_TOUCH,
@@ -72,7 +111,12 @@ class FloatingService : Service() {
         params.y = 300
 
         floatingButton.setOnClickListener {
-            triggerKeyboard()
+            try {
+                triggerKeyboard()
+            } catch (e: Exception) {
+                hatayiDosyayaYaz(e)
+                Toast.makeText(this, "Klavye hatası!", Toast.LENGTH_SHORT).show()
+            }
         }
 
         floatingButton.setOnTouchListener(object : View.OnTouchListener {
@@ -122,20 +166,12 @@ class FloatingService : Service() {
             }
         })
 
-        try {
-            windowManager.addView(floatingButton, params)
-        } catch (e: Exception) {
-            e.printStackTrace()
-        }
+        windowManager.addView(floatingButton, params)
     }
 
     private fun triggerKeyboard() {
-        try {
-            val imm = getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager
-            imm.toggleSoftInput(InputMethodManager.SHOW_FORCED, 0)
-        } catch (e: Exception) {
-            e.printStackTrace()
-        }
+        val imm = getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager
+        imm.toggleSoftInput(InputMethodManager.SHOW_FORCED, 0)
     }
 
     override fun onDestroy() {
