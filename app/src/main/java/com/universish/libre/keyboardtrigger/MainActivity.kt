@@ -30,31 +30,40 @@ class MainActivity : AppCompatActivity() {
         Log.e("MainActivity", "onCreate called")
         Toast.makeText(this, "App started", Toast.LENGTH_SHORT).show()
         createNotificationChannel()
-        ensurePermissionsAndStartService()
+
+        // If activity launched with auto_start=true, try to auto start the service and finish
+        val autoStart = intent?.getBooleanExtra("auto_start", false) ?: false
+        if (autoStart) {
+            ensurePermissionsAndStartService(autoStart = true)
+        } else {
+            // show status UI so user can see permission checks and controls
+            ensurePermissionsAndStartService(autoStart = false)
+        }
     }
 
     override fun onResume() {
         super.onResume()
         Log.e("MainActivity", "onResume called")
-        ensurePermissionsAndStartService()
+        // Re-evaluate when user returns from settings
+        ensurePermissionsAndStartService(autoStart = false)
     }
 
-    private fun ensurePermissionsAndStartService() {
+    private fun ensurePermissionsAndStartService(autoStart: Boolean) {
         val overlay = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) Settings.canDrawOverlays(this) else true
         val accessibility = isAccessibilityServiceEnabled()
         Log.e("MainActivity", "hasPermission: overlay=$overlay, accessibility=$accessibility")
 
-        if (overlay && accessibility) {
-            // Clear any setup notification and start
+        if (overlay && accessibility && autoStart) {
+            // Clear any setup notification and start (auto mode)
             cancelSetupNotification()
             startFloatingService()
             return
         }
 
-        // Show UI to help user grant missing permissions
+        // Always show UI when user opened the app manually so they can see statuses
         showPermissionUI(overlay, accessibility)
 
-        // Show persistent notification with quick actions to settings
+        // Show persistent notification with quick actions to settings if missing
         showSetupNotification(overlay, accessibility)
     }
 
@@ -130,12 +139,38 @@ class MainActivity : AppCompatActivity() {
             setOnClickListener { createAndShareDebugReport() }
         }
 
+        // Service control button shown in UI so user can start/stop manually
+        val btnService = Button(this).apply {
+            text = "Servisi Başlat / Yeniden Başlat"
+            setOnClickListener {
+                if (!overlay) Toast.makeText(this@MainActivity, "Lütfen önce Üstte Göster iznini verin", Toast.LENGTH_SHORT).show()
+                else if (!accessibility) Toast.makeText(this@MainActivity, "Lütfen önce Erişilebilirlik iznini verin", Toast.LENGTH_SHORT).show()
+                else {
+                    startFloatingService()
+                    Toast.makeText(this@MainActivity, "Servis başlatıldı", Toast.LENGTH_SHORT).show()
+                }
+            }
+        }
+
+        // Status indicators
+        val status = TextView(this).apply {
+            text = buildString {
+                append(if (overlay) "Üstte gösterme: ✅\n" else "Üstte gösterme: ❌\n")
+                append(if (accessibility) "Erişilebilirlik: ✅\n" else "Erişilebilirlik: ❌\n")
+                append("Overlay fallback: " + if (overlaySwitch.isChecked) "Açık" else "Kapalı")
+            }
+            textSize = 14f
+            setPadding(0, 10, 0, 10)
+        }
+
         layout.removeAllViews()
         layout.addView(info)
+        layout.addView(status)
         layout.addView(overlaySwitch)
         layout.addView(selectionSwitch)
         layout.addView(btnOverlay)
         layout.addView(btnAccess)
+        layout.addView(btnService)
         layout.addView(btnDebug)
         setContentView(layout)
     }
@@ -174,7 +209,7 @@ class MainActivity : AppCompatActivity() {
                 // emails
                 sanitized = sanitized.replace(Regex("[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\\.[A-Za-z]{2,}"), "[REDACTED_EMAIL]")
                 // phones (simple)
-                sanitized = sanitized.replace(Regex("\\+?\\d[\\d \-()]{6,}") , "[REDACTED_PHONE]")
+                sanitized = sanitized.replace(Regex("\\+?\\d[\\d ()-]{6,}"), "[REDACTED_PHONE]")
                 // long hex/base64 tokens
                 sanitized = sanitized.replace(Regex("(?i)[A-F0-9]{16,}"), "[REDACTED_HEX]")
                 sanitized = sanitized.replace(Regex("[A-Za-z0-9-_]{32,}"), "[REDACTED_TOKEN]")

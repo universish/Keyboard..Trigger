@@ -23,6 +23,7 @@ import android.view.MotionEvent
 import android.view.View
 import android.view.WindowManager
 import android.view.inputmethod.InputMethodManager
+import android.net.Uri
 import android.widget.EditText
 import android.widget.TextView
 import android.widget.Toast
@@ -277,6 +278,25 @@ class FloatingService : Service() {
             Log.e("FloatingService", "Floating button added successfully")
         } catch (e: Exception) {
             Log.e("FloatingService", "Failed to add floating button: ${e.message}")
+            hatayiDosyayaYaz(e)
+            // Show notification guiding user to enable overlay permission
+            try {
+                val nm = getSystemService(NotificationManager::class.java)
+                val channelId = "keyboard_trigger_alerts"
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                    val ch = NotificationChannel(channelId, "Keyboard Trigger Alerts", NotificationManager.IMPORTANCE_HIGH)
+                    nm.createNotificationChannel(ch)
+                }
+                val overlayIntent = PendingIntent.getActivity(this, 301, Intent(android.provider.Settings.ACTION_MANAGE_OVERLAY_PERMISSION, android.net.Uri.parse("package:$packageName")), PendingIntent.FLAG_IMMUTABLE)
+                val notif = NotificationCompat.Builder(this, channelId)
+                    .setContentTitle("Keyboard Trigger: Overlay izni gerekli")
+                    .setContentText("Floating buton görüntülenemedi. Lütfen Üstte Gösterme iznini verin.")
+                    .setSmallIcon(android.R.drawable.ic_dialog_alert)
+                    .setOngoing(false)
+                    .addAction(android.R.drawable.ic_menu_manage, "İzni Ver", overlayIntent)
+                    .build()
+                nm.notify(4, notif)
+            } catch (_: Exception) {}
         }
     
     }
