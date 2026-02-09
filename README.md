@@ -9,4 +9,14 @@ Features:
 
 Repository: https://github.com/universish/Keyboard..Trigger
 
-Developer: universish
+Developer: universish (Saffet Yavuz)
+
+Tags:
+- keyboard
+- overlay
+- accessibility
+- privacy
+- FOSS
+- GPLv3
+- input-method
+- android
