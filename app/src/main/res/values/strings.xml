@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Keyboard Trigger</string>
+    <string name="accessibility_service_description">Triggers the soft keyboard when the floating button is pressed</string>
+</resources>

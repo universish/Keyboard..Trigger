@@ -1,5 +1,9 @@
 package com.universish.libre.keyboardtrigger
 
+import android.app.Notification
+import android.app.NotificationChannel
+import android.app.NotificationManager
+import android.app.PendingIntent
 import android.app.Service
 import android.content.Context
 import android.content.Intent
@@ -11,6 +15,7 @@ import android.graphics.drawable.GradientDrawable
 import android.os.Build
 import android.os.Environment
 import android.os.IBinder
+import android.util.Log
 import android.view.Gravity
 import android.view.MotionEvent
 import android.view.View
@@ -18,6 +23,8 @@ import android.view.WindowManager
 import android.view.inputmethod.InputMethodManager
 import android.widget.TextView
 import android.widget.Toast
+import androidx.core.app.NotificationCompat
+import com.universish.libre.keyboardtrigger.KeyboardTriggerAccessibilityService
 import java.io.File
 import java.io.FileWriter
 import java.io.PrintWriter
@@ -57,6 +64,36 @@ class FloatingService : Service() {
 
     override fun onCreate() {
         super.onCreate()
+        Log.e("FloatingService", "onCreate called")
+
+        // Create notification channel for Android 8+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            val channel = NotificationChannel(
+                "keyboard_trigger_channel",
+                "Keyboard Trigger Service",
+                NotificationManager.IMPORTANCE_LOW
+            )
+            val notificationManager = getSystemService(NotificationManager::class.java)
+            notificationManager.createNotificationChannel(channel)
+        }
+
+        // Create notification
+        val notificationIntent = Intent().apply {
+            setClassName(this@FloatingService, "com.universish.libre.keyboardtrigger.MainActivity")
+        }
+        val pendingIntent = PendingIntent.getActivity(
+            this, 0, notificationIntent, PendingIntent.FLAG_IMMUTABLE
+        )
+
+        val notification = NotificationCompat.Builder(this, "keyboard_trigger_channel")
+            .setContentTitle("Keyboard Trigger")
+            .setContentText("Floating button is active")
+            .setSmallIcon(android.R.drawable.ic_dialog_info)
+            .setContentIntent(pendingIntent)
+            .build()
+
+        // Start foreground service FIRST
+        startForeground(1, notification)
 
         // GLOBAL HATA YAKALAYICI
         Thread.setDefaultUncaughtExceptionHandler { thread, e ->
@@ -110,11 +147,16 @@ class FloatingService : Service() {
         params.x = screenWidth - 100
         params.y = 300
 
+        var lastClick = 0L
         floatingButton.setOnClickListener {
+            val now = System.currentTimeMillis()
+            if (now - lastClick < 300) return@setOnClickListener // debounce
+            lastClick = now
+            Log.e("FloatingService", "Button clicked")
             try {
-                val intent = Intent(this, TriggerActivity::class.java)
-                intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-                startActivity(intent)
+                // Broadcast ile erişilebilirlik servisine tetikleme isteği gönder
+                val intent = Intent("com.universish.libre.keyboardtrigger.ACTION_TRIGGER_KEYBOARD").apply { setPackage(packageName) }
+                sendBroadcast(intent)
             } catch (e: Exception) {
                 hatayiDosyayaYaz(e)
                 Toast.makeText(this, "Klavye hatası!", Toast.LENGTH_SHORT).show()
@@ -168,10 +210,17 @@ class FloatingService : Service() {
             }
         })
 
-        windowManager.addView(floatingButton, params)
+        Log.e("FloatingService", "Adding floating button to window")
+        try {
+            windowManager.addView(floatingButton, params)
+            Log.e("FloatingService", "Floating button added successfully")
+        } catch (e: Exception) {
+            Log.e("FloatingService", "Failed to add floating button: ${e.message}")
+        }
     }
 
     private fun triggerKeyboard() {
+        Log.e("FloatingService", "Triggering keyboard")
         val imm = getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager
         imm.toggleSoftInput(InputMethodManager.SHOW_FORCED, 0)
     }

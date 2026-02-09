@@ -3,6 +3,7 @@
 
     <uses-permission android:name="android.permission.SYSTEM_ALERT_WINDOW"/>
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE"/>
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_SPECIAL_USE"/>
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS"/>
 
     <application
@@ -11,22 +12,27 @@
         android:roundIcon="@drawable/ic_launcher_icon"
         android:theme="@style/Theme.AppCompat.Light.NoActionBar">
 
-        <service android:name=".FloatingService" 
-                 android:enabled="true"
-                 android:exported="false"/>
+        <service android:name=".KeyboardTriggerAccessibilityService"
+                 android:permission="android.permission.BIND_ACCESSIBILITY_SERVICE"
+                 android:exported="false">
+            <intent-filter>
+                <action android:name="android.accessibilityservice.AccessibilityService" />
+            </intent-filter>
+            <meta-data android:name="android.accessibilityservice"
+                       android:resource="@xml/accessibility_service_config" />
+        </service>
         
+        <service android:name=".FloatingService"
+                 android:foregroundServiceType="specialUse"
+                 android:exported="false" />
+        
+        <activity android:name=".KeyboardShowActivity" android:exported="true" android:theme="@android:style/Theme.Translucent.NoTitleBar" />
+
         <activity android:name=".MainActivity" android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
-
-        <activity android:name=".TriggerActivity"
-                  android:theme="@android:style/Theme.Translucent.NoTitleBar"
-                  android:excludeFromRecents="true"
-                  android:taskAffinity=""
-                  android:launchMode="singleInstance"
-                  android:exported="false" />
     </application>
 </manifest>

@@ -1,9 +1,9 @@
 -- Merging decision tree log ---
 manifest
-ADDED from C:\Users\sincap\MyProjects\Keyboard__Trigger\app\src\main\AndroidManifest.xml:1:1-32:12
-INJECTED from C:\Users\sincap\MyProjects\Keyboard__Trigger\app\src\main\AndroidManifest.xml:1:1-32:12
-INJECTED from C:\Users\sincap\MyProjects\Keyboard__Trigger\app\src\main\AndroidManifest.xml:1:1-32:12
-INJECTED from C:\Users\sincap\MyProjects\Keyboard__Trigger\app\src\main\AndroidManifest.xml:1:1-32:12
+ADDED from C:\Users\sincap\MyProjects\Keyboard__Trigger\app\src\main\AndroidManifest.xml:1:1-38:12
+INJECTED from C:\Users\sincap\MyProjects\Keyboard__Trigger\app\src\main\AndroidManifest.xml:1:1-38:12
+INJECTED from C:\Users\sincap\MyProjects\Keyboard__Trigger\app\src\main\AndroidManifest.xml:1:1-38:12
+INJECTED from C:\Users\sincap\MyProjects\Keyboard__Trigger\app\src\main\AndroidManifest.xml:1:1-38:12
 MERGED from [com.google.android.material:material:1.10.0] C:\Users\sincap\.gradle\caches\transforms-3\f4c752674b717fb3b4483673376f9c94\transformed\material-1.10.0\AndroidManifest.xml:17:1-24:12
 MERGED from [androidx.appcompat:appcompat-resources:1.6.1] C:\Users\sincap\.gradle\caches\transforms-3\3d9107aec8cf21707a817233fc55d9a4\transformed\jetified-appcompat-resources-1.6.1\AndroidManifest.xml:17:1-22:12
 MERGED from [androidx.constraintlayout:constraintlayout:2.0.1] C:\Users\sincap\.gradle\caches\transforms-3\a8ac123ade2aec294095307fe7670494\transformed\constraintlayout-2.0.1\AndroidManifest.xml:2:1-11:12
@@ -62,13 +62,17 @@ uses-permission#android.permission.FOREGROUND_SERVICE
 ADDED from C:\Users\sincap\MyProjects\Keyboard__Trigger\app\src\main\AndroidManifest.xml:5:5-76
 	android:name
 		ADDED from C:\Users\sincap\MyProjects\Keyboard__Trigger\app\src\main\AndroidManifest.xml:5:22-74
-uses-permission#android.permission.POST_NOTIFICATIONS
-ADDED from C:\Users\sincap\MyProjects\Keyboard__Trigger\app\src\main\AndroidManifest.xml:6:5-76
+uses-permission#android.permission.FOREGROUND_SERVICE_SPECIAL_USE
+ADDED from C:\Users\sincap\MyProjects\Keyboard__Trigger\app\src\main\AndroidManifest.xml:6:5-88
 	android:name
-		ADDED from C:\Users\sincap\MyProjects\Keyboard__Trigger\app\src\main\AndroidManifest.xml:6:22-74
+		ADDED from C:\Users\sincap\MyProjects\Keyboard__Trigger\app\src\main\AndroidManifest.xml:6:22-86
+uses-permission#android.permission.POST_NOTIFICATIONS
+ADDED from C:\Users\sincap\MyProjects\Keyboard__Trigger\app\src\main\AndroidManifest.xml:7:5-76
+	android:name
+		ADDED from C:\Users\sincap\MyProjects\Keyboard__Trigger\app\src\main\AndroidManifest.xml:7:22-74
 application
-ADDED from C:\Users\sincap\MyProjects\Keyboard__Trigger\app\src\main\AndroidManifest.xml:8:5-31:19
-INJECTED from C:\Users\sincap\MyProjects\Keyboard__Trigger\app\src\main\AndroidManifest.xml:8:5-31:19
+ADDED from C:\Users\sincap\MyProjects\Keyboard__Trigger\app\src\main\AndroidManifest.xml:9:5-37:19
+INJECTED from C:\Users\sincap\MyProjects\Keyboard__Trigger\app\src\main\AndroidManifest.xml:9:5-37:19
 MERGED from [com.google.android.material:material:1.10.0] C:\Users\sincap\.gradle\caches\transforms-3\f4c752674b717fb3b4483673376f9c94\transformed\material-1.10.0\AndroidManifest.xml:22:5-20
 MERGED from [com.google.android.material:material:1.10.0] C:\Users\sincap\.gradle\caches\transforms-3\f4c752674b717fb3b4483673376f9c94\transformed\material-1.10.0\AndroidManifest.xml:22:5-20
 MERGED from [androidx.constraintlayout:constraintlayout:2.0.1] C:\Users\sincap\.gradle\caches\transforms-3\a8ac123ade2aec294095307fe7670494\transformed\constraintlayout-2.0.1\AndroidManifest.xml:9:5-20
@@ -90,51 +94,65 @@ MERGED from [androidx.startup:startup-runtime:1.1.1] C:\Users\sincap\.gradle\cac
 	android:appComponentFactory
 		ADDED from [androidx.core:core:1.12.0] C:\Users\sincap\.gradle\caches\transforms-3\6f3d36e3706179016bd3ae3643d20e3f\transformed\core-1.12.0\AndroidManifest.xml:28:18-86
 	android:label
-		ADDED from C:\Users\sincap\MyProjects\Keyboard__Trigger\app\src\main\AndroidManifest.xml:9:9-41
+		ADDED from C:\Users\sincap\MyProjects\Keyboard__Trigger\app\src\main\AndroidManifest.xml:10:9-41
 	android:roundIcon
-		ADDED from C:\Users\sincap\MyProjects\Keyboard__Trigger\app\src\main\AndroidManifest.xml:11:9-55
+		ADDED from C:\Users\sincap\MyProjects\Keyboard__Trigger\app\src\main\AndroidManifest.xml:12:9-55
 	android:icon
-		ADDED from C:\Users\sincap\MyProjects\Keyboard__Trigger\app\src\main\AndroidManifest.xml:10:9-50
+		ADDED from C:\Users\sincap\MyProjects\Keyboard__Trigger\app\src\main\AndroidManifest.xml:11:9-50
 	android:theme
-		ADDED from C:\Users\sincap\MyProjects\Keyboard__Trigger\app\src\main\AndroidManifest.xml:12:9-65
+		ADDED from C:\Users\sincap\MyProjects\Keyboard__Trigger\app\src\main\AndroidManifest.xml:13:9-65
+service#com.universish.libre.keyboardtrigger.KeyboardTriggerAccessibilityService
+ADDED from C:\Users\sincap\MyProjects\Keyboard__Trigger\app\src\main\AndroidManifest.xml:15:9-23:19
+	android:exported
+		ADDED from C:\Users\sincap\MyProjects\Keyboard__Trigger\app\src\main\AndroidManifest.xml:17:18-42
+	android:permission
+		ADDED from C:\Users\sincap\MyProjects\Keyboard__Trigger\app\src\main\AndroidManifest.xml:16:18-84
+	android:name
+		ADDED from C:\Users\sincap\MyProjects\Keyboard__Trigger\app\src\main\AndroidManifest.xml:15:18-69
+intent-filter#action:name:android.accessibilityservice.AccessibilityService
+ADDED from C:\Users\sincap\MyProjects\Keyboard__Trigger\app\src\main\AndroidManifest.xml:18:13-20:29
+action#android.accessibilityservice.AccessibilityService
+ADDED from C:\Users\sincap\MyProjects\Keyboard__Trigger\app\src\main\AndroidManifest.xml:19:17-92
+	android:name
+		ADDED from C:\Users\sincap\MyProjects\Keyboard__Trigger\app\src\main\AndroidManifest.xml:19:25-89
+meta-data#android.accessibilityservice
+ADDED from C:\Users\sincap\MyProjects\Keyboard__Trigger\app\src\main\AndroidManifest.xml:21:13-22:79
+	android:resource
+		ADDED from C:\Users\sincap\MyProjects\Keyboard__Trigger\app\src\main\AndroidManifest.xml:22:24-76
+	android:name
+		ADDED from C:\Users\sincap\MyProjects\Keyboard__Trigger\app\src\main\AndroidManifest.xml:21:24-67
 service#com.universish.libre.keyboardtrigger.FloatingService
-ADDED from C:\Users\sincap\MyProjects\Keyboard__Trigger\app\src\main\AndroidManifest.xml:14:9-16:44
-	android:enabled
-		ADDED from C:\Users\sincap\MyProjects\Keyboard__Trigger\app\src\main\AndroidManifest.xml:15:18-40
+ADDED from C:\Users\sincap\MyProjects\Keyboard__Trigger\app\src\main\AndroidManifest.xml:25:9-27:45
 	android:exported
-		ADDED from C:\Users\sincap\MyProjects\Keyboard__Trigger\app\src\main\AndroidManifest.xml:16:18-42
+		ADDED from C:\Users\sincap\MyProjects\Keyboard__Trigger\app\src\main\AndroidManifest.xml:27:18-42
+	android:foregroundServiceType
+		ADDED from C:\Users\sincap\MyProjects\Keyboard__Trigger\app\src\main\AndroidManifest.xml:26:18-60
 	android:name
-		ADDED from C:\Users\sincap\MyProjects\Keyboard__Trigger\app\src\main\AndroidManifest.xml:14:18-49
-activity#com.universish.libre.keyboardtrigger.MainActivity
-ADDED from C:\Users\sincap\MyProjects\Keyboard__Trigger\app\src\main\AndroidManifest.xml:18:9-23:20
+		ADDED from C:\Users\sincap\MyProjects\Keyboard__Trigger\app\src\main\AndroidManifest.xml:25:18-49
+activity#com.universish.libre.keyboardtrigger.KeyboardShowActivity
+ADDED from C:\Users\sincap\MyProjects\Keyboard__Trigger\app\src\main\AndroidManifest.xml:29:9-142
 	android:exported
-		ADDED from C:\Users\sincap\MyProjects\Keyboard__Trigger\app\src\main\AndroidManifest.xml:18:48-71
-	android:name
-		ADDED from C:\Users\sincap\MyProjects\Keyboard__Trigger\app\src\main\AndroidManifest.xml:18:19-47
-intent-filter#action:name:android.intent.action.MAIN+category:name:android.intent.category.LAUNCHER
-ADDED from C:\Users\sincap\MyProjects\Keyboard__Trigger\app\src\main\AndroidManifest.xml:19:13-22:29
-action#android.intent.action.MAIN
-ADDED from C:\Users\sincap\MyProjects\Keyboard__Trigger\app\src\main\AndroidManifest.xml:20:17-69
-	android:name
-		ADDED from C:\Users\sincap\MyProjects\Keyboard__Trigger\app\src\main\AndroidManifest.xml:20:25-66
-category#android.intent.category.LAUNCHER
-ADDED from C:\Users\sincap\MyProjects\Keyboard__Trigger\app\src\main\AndroidManifest.xml:21:17-77
-	android:name
-		ADDED from C:\Users\sincap\MyProjects\Keyboard__Trigger\app\src\main\AndroidManifest.xml:21:27-74
-activity#com.universish.libre.keyboardtrigger.TriggerActivity
-ADDED from C:\Users\sincap\MyProjects\Keyboard__Trigger\app\src\main\AndroidManifest.xml:25:9-30:46
-	android:excludeFromRecents
-		ADDED from C:\Users\sincap\MyProjects\Keyboard__Trigger\app\src\main\AndroidManifest.xml:27:19-52
-	android:launchMode
-		ADDED from C:\Users\sincap\MyProjects\Keyboard__Trigger\app\src\main\AndroidManifest.xml:29:19-54
-	android:exported
-		ADDED from C:\Users\sincap\MyProjects\Keyboard__Trigger\app\src\main\AndroidManifest.xml:30:19-43
+		ADDED from C:\Users\sincap\MyProjects\Keyboard__Trigger\app\src\main\AndroidManifest.xml:29:56-79
 	android:theme
-		ADDED from C:\Users\sincap\MyProjects\Keyboard__Trigger\app\src\main\AndroidManifest.xml:26:19-78
-	android:taskAffinity
-		ADDED from C:\Users\sincap\MyProjects\Keyboard__Trigger\app\src\main\AndroidManifest.xml:28:19-42
+		ADDED from C:\Users\sincap\MyProjects\Keyboard__Trigger\app\src\main\AndroidManifest.xml:29:80-139
 	android:name
-		ADDED from C:\Users\sincap\MyProjects\Keyboard__Trigger\app\src\main\AndroidManifest.xml:25:19-50
+		ADDED from C:\Users\sincap\MyProjects\Keyboard__Trigger\app\src\main\AndroidManifest.xml:29:19-55
+activity#com.universish.libre.keyboardtrigger.MainActivity
+ADDED from C:\Users\sincap\MyProjects\Keyboard__Trigger\app\src\main\AndroidManifest.xml:31:9-36:20
+	android:exported
+		ADDED from C:\Users\sincap\MyProjects\Keyboard__Trigger\app\src\main\AndroidManifest.xml:31:48-71
+	android:name
+		ADDED from C:\Users\sincap\MyProjects\Keyboard__Trigger\app\src\main\AndroidManifest.xml:31:19-47
+intent-filter#action:name:android.intent.action.MAIN+category:name:android.intent.category.LAUNCHER
+ADDED from C:\Users\sincap\MyProjects\Keyboard__Trigger\app\src\main\AndroidManifest.xml:32:13-35:29
+action#android.intent.action.MAIN
+ADDED from C:\Users\sincap\MyProjects\Keyboard__Trigger\app\src\main\AndroidManifest.xml:33:17-69
+	android:name
+		ADDED from C:\Users\sincap\MyProjects\Keyboard__Trigger\app\src\main\AndroidManifest.xml:33:25-66
+category#android.intent.category.LAUNCHER
+ADDED from C:\Users\sincap\MyProjects\Keyboard__Trigger\app\src\main\AndroidManifest.xml:34:17-77
+	android:name
+		ADDED from C:\Users\sincap\MyProjects\Keyboard__Trigger\app\src\main\AndroidManifest.xml:34:27-74
 uses-sdk
 INJECTED from C:\Users\sincap\MyProjects\Keyboard__Trigger\app\src\main\AndroidManifest.xml reason: use-sdk injection requested
 INJECTED from C:\Users\sincap\MyProjects\Keyboard__Trigger\app\src\main\AndroidManifest.xml
