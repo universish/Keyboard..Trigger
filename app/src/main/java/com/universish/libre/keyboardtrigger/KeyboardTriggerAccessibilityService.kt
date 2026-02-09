@@ -1,8 +1,11 @@
+// Application creator and developer: universish (Saffet Yavuz)
+// License: GPLv3 (see LICENSE in repo)
 package com.universish.libre.keyboardtrigger
 
 import android.accessibilityservice.AccessibilityService
 import android.accessibilityservice.AccessibilityServiceInfo
 import android.content.Intent
+import android.graphics.Rect
 import android.view.accessibility.AccessibilityEvent
 import android.view.inputmethod.InputMethodManager
 
@@ -12,7 +15,8 @@ class KeyboardTriggerAccessibilityService : AccessibilityService() {
         super.onServiceConnected()
         android.util.Log.e("AccessibilityService", "onServiceConnected")
         val info = AccessibilityServiceInfo()
-        info.eventTypes = AccessibilityEvent.TYPE_VIEW_FOCUSED or AccessibilityEvent.TYPE_WINDOW_STATE_CHANGED
+        // Include selection changed so we can optionally show selection bubble
+        info.eventTypes = AccessibilityEvent.TYPE_VIEW_FOCUSED or AccessibilityEvent.TYPE_WINDOW_STATE_CHANGED or AccessibilityEvent.TYPE_VIEW_TEXT_SELECTION_CHANGED
         info.feedbackType = AccessibilityServiceInfo.FEEDBACK_GENERIC
         // Allow retrieving windows so we can find editable nodes and restore focus
         info.flags = AccessibilityServiceInfo.FLAG_REQUEST_TOUCH_EXPLORATION_MODE or AccessibilityServiceInfo.FLAG_RETRIEVE_INTERACTIVE_WINDOWS
@@ -75,7 +79,32 @@ class KeyboardTriggerAccessibilityService : AccessibilityService() {
     }
 
     override fun onAccessibilityEvent(event: AccessibilityEvent?) {
-        // We don't need to react to events, just be active to trigger keyboard
+        try {
+            if (event == null) return
+            if (event.eventType == AccessibilityEvent.TYPE_VIEW_TEXT_SELECTION_CHANGED) {
+                // Check preference: only act if selection bubble enabled
+                val prefs = getSharedPreferences("keyboard_trigger_prefs", MODE_PRIVATE)
+                val selectionEnabled = prefs.getBoolean("selection_bubble_enabled", false)
+                if (!selectionEnabled) return
+
+                val source = event.source
+                if (source != null) {
+                    val r = Rect()
+                    source.getBoundsInScreen(r)
+                    val cx = (r.left + r.right) / 2
+                    val cy = (r.top + r.bottom) / 2
+                    android.util.Log.e("AccessibilityService", "Selection changed at $cx,$cy - requesting bubble")
+                    val b = Intent("com.universish.libre.keyboardtrigger.ACTION_SHOW_SELECTION_BUBBLE").apply {
+                        putExtra("x", cx)
+                        putExtra("y", cy)
+                        setPackage(packageName)
+                    }
+                    sendBroadcast(b)
+                }
+            }
+        } catch (e: Exception) {
+            android.util.Log.e("AccessibilityService", "onAccessibilityEvent error: ${'$'}{e.message}")
+        }
     }
 
     override fun onInterrupt() {

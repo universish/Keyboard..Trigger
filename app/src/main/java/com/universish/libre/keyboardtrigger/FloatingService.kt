@@ -1,3 +1,5 @@
+// Application creator and developer: universish (Saffet Yavuz)
+// License: GPLv3 (see LICENSE in repo)
 package com.universish.libre.keyboardtrigger
 
 import android.app.NotificationChannel
