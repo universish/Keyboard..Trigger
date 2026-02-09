@@ -1,5 +1,8 @@
 package com.universish.libre.keyboardtrigger
 
+import android.app.NotificationChannel
+import android.app.NotificationManager
+import android.app.PendingIntent
 import android.content.Intent
 import android.graphics.Color
 import android.net.Uri
@@ -15,55 +18,59 @@ import android.widget.LinearLayout
 import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
-import androidx.core.content.ContextCompat
+import androidx.core.app.NotificationCompat
 
 class MainActivity : AppCompatActivity() {
+
+    private val CHANNEL_ID = "keyboard_trigger_setup"
+    private val NOTIF_ID = 2
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         Log.e("MainActivity", "onCreate called")
         Toast.makeText(this, "App started", Toast.LENGTH_SHORT).show()
-
-        // Sadece overlay izni kontrol et
-        if (hasPermission()) {
-            startFloatingService()
-        } else {
-            // İzin yoksa UI göster
-            setupPermissionUI()
-        }
+        createNotificationChannel()
+        ensurePermissionsAndStartService()
     }
 
     override fun onResume() {
         super.onResume()
         Log.e("MainActivity", "onResume called")
-        Toast.makeText(this, "App resumed", Toast.LENGTH_SHORT).show()
-        // Kullanıcı ayarlardan dönünce tekrar kontrol et
-        if (hasPermission()) {
+        ensurePermissionsAndStartService()
+    }
+
+    private fun ensurePermissionsAndStartService() {
+        val overlay = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) Settings.canDrawOverlays(this) else true
+        val accessibility = isAccessibilityServiceEnabled()
+        Log.e("MainActivity", "hasPermission: overlay=$overlay, accessibility=$accessibility")
+
+        if (overlay && accessibility) {
+            // Clear any setup notification and start
+            cancelSetupNotification()
             startFloatingService()
+            return
         }
+
+        // Show UI to help user grant missing permissions
+        showPermissionUI(overlay, accessibility)
+
+        // Show persistent notification with quick actions to settings
+        showSetupNotification(overlay, accessibility)
     }
 
     private fun isAccessibilityServiceEnabled(): Boolean {
-        val accessibilityManager = getSystemService(ACCESSIBILITY_SERVICE) as android.view.accessibility.AccessibilityManager
-        val enabledServices = accessibilityManager.getEnabledAccessibilityServiceList(AccessibilityServiceInfo.FEEDBACK_ALL_MASK)
-        for (service in enabledServices) {
-            if (service.resolveInfo.serviceInfo.packageName == packageName &&
-                service.resolveInfo.serviceInfo.name == KeyboardTriggerAccessibilityService::class.java.name) {
+        val am = getSystemService(ACCESSIBILITY_SERVICE) as AccessibilityManager
+        val enabled = am.getEnabledAccessibilityServiceList(AccessibilityServiceInfo.FEEDBACK_ALL_MASK)
+        for (s in enabled) {
+            if (s.resolveInfo.serviceInfo.packageName == packageName &&
+                s.resolveInfo.serviceInfo.name == KeyboardTriggerAccessibilityService::class.java.name) {
                 return true
             }
         }
         return false
     }
 
-    private fun hasPermission(): Boolean {
-        val overlay = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) Settings.canDrawOverlays(this) else true
-        val accessibility = isAccessibilityServiceEnabled()
-        Log.e("MainActivity", "hasPermission: overlay=$overlay, accessibility=$accessibility")
-        return overlay && accessibility
-    }
-
-    private fun setupPermissionUI() {
-        // XML kullanmadan kodla arayüz oluşturuyoruz (Hata riskini azaltır)
+    private fun showPermissionUI(overlay: Boolean, accessibility: Boolean) {
         val layout = LinearLayout(this).apply {
             orientation = LinearLayout.VERTICAL
             gravity = Gravity.CENTER
@@ -71,50 +78,44 @@ class MainActivity : AppCompatActivity() {
             setPadding(50, 50, 50, 50)
         }
 
-        val textInfo = TextView(this).apply {
-            text = "Bu uygulamanın çalışması için\n'Diğer Uygulamaların Üzerinde Göster'\nve 'Erişilebilirlik' izinleri gereklidir."
-            textSize = 18f
-            gravity = Gravity.CENTER
+        val info = TextView(this).apply {
+            text = buildString {
+                append("Uygulama çalışması için şu izinler gereklidir:\n\n")
+                append(if (!overlay) "• Üstte gösterme izni\n" else "")
+                append(if (!accessibility) "• Erişilebilirlik servisi (Keyboard Trigger)\n" else "")
+                append("\nLütfen izinleri verin, ardından geri dönün.")
+            }
+            textSize = 16f
             setTextColor(Color.BLACK)
-            setPadding(0, 0, 0, 50)
+            gravity = Gravity.CENTER
+            setPadding(0, 0, 0, 30)
         }
 
-        val btnGrantOverlay = Button(this).apply {
-            text = "ÜSTTE GÖSTER İZNİ VER"
-            textSize = 16f
-            setBackgroundColor(Color.parseColor("#3DDC84"))
-            setTextColor(Color.WHITE)
-            setOnClickListener {
-                requestPermission()
-            }
+        val btnOverlay = Button(this).apply {
+            text = if (!overlay) "ÜSTTE GÖSTER İZNİ VER" else "ÜSTTE GÖSTER İZNİ VERİLDİ"
+            isEnabled = !overlay
+            setOnClickListener { requestOverlayPermission() }
+        }
+        val btnAccess = Button(this).apply {
+            text = if (!accessibility) "ERİŞİLEBİLİRLİK İZNİ VER" else "ERİŞİLEBİLİRLİK AKTİF"
+            isEnabled = !accessibility
+            setOnClickListener { requestAccessibilityPermission() }
         }
 
-        val btnGrantAccessibility = Button(this).apply {
-            text = "ERİŞİLEBİLİRLİK İZNİ VER"
-            textSize = 16f
-            setBackgroundColor(Color.parseColor("#FF9800"))
-            setTextColor(Color.WHITE)
-            setOnClickListener {
-                requestAccessibilityPermission()
-            }
-        }
-
-        layout.addView(textInfo)
-        layout.addView(btnGrantOverlay)
-        layout.addView(btnGrantAccessibility)
+        layout.removeAllViews()
+        layout.addView(info)
+        layout.addView(btnOverlay)
+        layout.addView(btnAccess)
         setContentView(layout)
     }
 
-    private fun requestPermission() {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-            try {
-                val intent = Intent(Settings.ACTION_MANAGE_OVERLAY_PERMISSION, Uri.parse("package:$packageName"))
-                startActivity(intent)
-            } catch (e: Exception) {
-                // Bazı telefonlarda direkt paket sayfasına gidemezse
-                val intent = Intent(Settings.ACTION_MANAGE_OVERLAY_PERMISSION)
-                startActivity(intent)
-            }
+    private fun requestOverlayPermission() {
+        try {
+            val intent = Intent(Settings.ACTION_MANAGE_OVERLAY_PERMISSION, Uri.parse("package:$packageName"))
+            startActivity(intent)
+        } catch (e: Exception) {
+            val intent = Intent(Settings.ACTION_MANAGE_OVERLAY_PERMISSION)
+            startActivity(intent)
         }
     }
 
@@ -137,7 +138,42 @@ class MainActivity : AppCompatActivity() {
         } else {
             startService(intent)
         }
-        // Servis başladı, artık aktiviteyi kapatabiliriz.
         finish()
     }
+
+    private fun createNotificationChannel() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            val nm = getSystemService(NotificationManager::class.java)
+            val channel = NotificationChannel(CHANNEL_ID, "Keyboard Trigger Setup", NotificationManager.IMPORTANCE_LOW)
+            nm.createNotificationChannel(channel)
+        }
+    }
+
+    private fun showSetupNotification(overlay: Boolean, accessibility: Boolean) {
+        val overlayIntent = PendingIntent.getActivity(
+            this, 101, Intent(Settings.ACTION_MANAGE_OVERLAY_PERMISSION, Uri.parse("package:$packageName")),
+            PendingIntent.FLAG_IMMUTABLE
+        )
+        val accessIntent = PendingIntent.getActivity(
+            this, 102, Intent(Settings.ACTION_ACCESSIBILITY_SETTINGS),
+            PendingIntent.FLAG_IMMUTABLE
+        )
+
+        val nm = getSystemService(NOTIFICATION_SERVICE) as NotificationManager
+        val notif = NotificationCompat.Builder(this, CHANNEL_ID)
+            .setSmallIcon(android.R.drawable.ic_dialog_alert)
+            .setContentTitle("Keyboard Trigger: Eksik izinler")
+            .setContentText("Uygulamayı çalıştırmak için gerekli izinleri verin.")
+            .setOngoing(true)
+            .addAction(android.R.drawable.ic_menu_manage, if (!overlay) "Üstte Göster" else "Üstte Göster ✓", overlayIntent)
+            .addAction(android.R.drawable.ic_menu_info_details, if (!accessibility) "Erişilebilirlik" else "Erişilebilirlik ✓", accessIntent)
+            .build()
+        nm.notify(NOTIF_ID, notif)
+    }
+
+    private fun cancelSetupNotification() {
+        val nm = getSystemService(NOTIFICATION_SERVICE) as NotificationManager
+        nm.cancel(NOTIF_ID)
+    }
 }
+

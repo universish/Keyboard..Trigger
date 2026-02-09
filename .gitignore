@@ -14,3 +14,18 @@ local.properties
 *.backup
 sor.py
 derle_cepte.sh
+
+# Compressed archives and backups
+*.tar
+*.tar.gz
+*.tgz
+*.tar.bz2
+*.tar.xz
+*.zip
+*.gz
+*.7z
+*.rar
+*.xz
+*.bz2
+*.backup.tar.gz
+*.backup.tar

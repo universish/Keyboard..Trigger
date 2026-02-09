@@ -1,30 +1,32 @@
 package com.universish.libre.keyboardtrigger
 
-import android.app.Notification
 import android.app.NotificationChannel
 import android.app.NotificationManager
 import android.app.PendingIntent
 import android.app.Service
+import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
+import android.content.IntentFilter
 import android.content.res.Resources
 import android.graphics.Color
 import android.graphics.PixelFormat
 import android.graphics.Typeface
 import android.graphics.drawable.GradientDrawable
 import android.os.Build
-import android.os.Environment
+import android.os.Handler
 import android.os.IBinder
+import android.os.Looper
 import android.util.Log
 import android.view.Gravity
 import android.view.MotionEvent
 import android.view.View
 import android.view.WindowManager
 import android.view.inputmethod.InputMethodManager
+import android.widget.EditText
 import android.widget.TextView
 import android.widget.Toast
 import androidx.core.app.NotificationCompat
-import com.universish.libre.keyboardtrigger.KeyboardTriggerAccessibilityService
 import java.io.File
 import java.io.FileWriter
 import java.io.PrintWriter
@@ -37,6 +39,22 @@ class FloatingService : Service() {
     private lateinit var floatingButton: TextView
     private lateinit var params: WindowManager.LayoutParams
     private var screenWidth = 0
+
+    private val handler = Handler(Looper.getMainLooper())
+    private var overlayView: EditText? = null
+    private var overlayPollingRunnable: Runnable? = null
+
+    // Broadcast receiver to accept explicit overlay requests (from AccessibilityService fallback)
+    private val overlayRequestReceiver = object : BroadcastReceiver() {
+        override fun onReceive(context: Context?, intent: Intent?) {
+            Log.e("FloatingService", "Received overlay request from AccessibilityService")
+            try {
+                showKeyboardOverlayFallback()
+            } catch (e: Exception) {
+                hatayiDosyayaYaz(e)
+            }
+        }
+    }
 
     // --- HATA RAPORLAMA FONKSİYONU ---
     private fun hatayiDosyayaYaz(e: Throwable) {
@@ -102,6 +120,11 @@ class FloatingService : Service() {
         }
 
         try {
+            // Register receiver for overlay request (AccessibilityService fallback)
+            val filter = IntentFilter("com.universish.libre.keyboardtrigger.ACTION_REQUEST_OVERLAY")
+            // Use two-arg overload for broad compatibility
+            registerReceiver(overlayRequestReceiver, filter)
+
             baslat()
         } catch (e: Exception) {
             hatayiDosyayaYaz(e)
@@ -114,12 +137,12 @@ class FloatingService : Service() {
         screenWidth = Resources.getSystem().displayMetrics.widthPixels
 
         floatingButton = TextView(this).apply {
-            text = "⬆" 
-            textSize = 22f 
+            text = "⬆"
+            textSize = 22f
             setTypeface(null, Typeface.BOLD)
             setTextColor(Color.BLACK)
             gravity = Gravity.CENTER
-            
+
             val shape = GradientDrawable()
             shape.shape = GradientDrawable.RECTANGLE
             shape.cornerRadius = 15f
@@ -154,9 +177,19 @@ class FloatingService : Service() {
             lastClick = now
             Log.e("FloatingService", "Button clicked")
             try {
-                // Broadcast ile erişilebilirlik servisine tetikleme isteği gönder
+                // 1) Ask AccessibilityService to focus any editable node
                 val intent = Intent("com.universish.libre.keyboardtrigger.ACTION_TRIGGER_KEYBOARD").apply { setPackage(packageName) }
                 sendBroadcast(intent)
+
+                // 2) Schedule a fallback overlay after a short delay; AccessibilityService may have handled it already
+                handler.postDelayed({
+                    try {
+                        showKeyboardOverlayFallback()
+                    } catch (e: Exception) {
+                        hatayiDosyayaYaz(e)
+                    }
+                }, 300)
+
             } catch (e: Exception) {
                 hatayiDosyayaYaz(e)
                 Toast.makeText(this, "Klavye hatası!", Toast.LENGTH_SHORT).show()
@@ -219,14 +252,91 @@ class FloatingService : Service() {
         }
     }
 
+    private fun showKeyboardOverlayFallback() {
+        // If already showing or added, skip
+        if (overlayView != null) return
+        try {
+            val imm = getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager
+
+            // Create a tiny invisible EditText that can receive focus
+            val edit = EditText(this).apply {
+                alpha = 0f
+                isFocusable = true
+                isFocusableInTouchMode = true
+                isCursorVisible = false
+                setTextIsSelectable(false)
+                setTextColor(Color.TRANSPARENT)
+                setBackgroundColor(Color.TRANSPARENT)
+            }
+
+            val layoutFlag = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) WindowManager.LayoutParams.TYPE_APPLICATION_OVERLAY else WindowManager.LayoutParams.TYPE_PHONE
+            val lp = WindowManager.LayoutParams(
+                1,
+                1,
+                layoutFlag,
+                // important: do NOT set FLAG_NOT_FOCUSABLE so IME can attach
+                0,
+                PixelFormat.TRANSLUCENT
+            )
+            lp.gravity = Gravity.TOP or Gravity.START
+            lp.x = 0
+            lp.y = 0
+            lp.softInputMode = WindowManager.LayoutParams.SOFT_INPUT_STATE_VISIBLE or WindowManager.LayoutParams.SOFT_INPUT_ADJUST_NOTHING
+
+            windowManager.addView(edit, lp)
+            overlayView = edit
+
+            // Request focus and show IME
+            edit.requestFocus()
+            imm.showSoftInput(edit, InputMethodManager.SHOW_FORCED)
+
+            // Poll IME state and remove overlay when keyboard is visible or after timeout
+            var elapsed = 0
+            overlayPollingRunnable = object : Runnable {
+                override fun run() {
+                    val active = try { imm.isAcceptingText() } catch (_: Exception) { false }
+                    if (active) {
+                        // Keep the overlay briefly so keyboard stays attached, then remove
+                        handler.postDelayed({ removeOverlayFallback() }, 700)
+                    } else {
+                        elapsed += 200
+                        if (elapsed > 3000) {
+                            removeOverlayFallback()
+                        } else {
+                            handler.postDelayed(this, 200)
+                        }
+                    }
+                }
+            }
+            handler.postDelayed(overlayPollingRunnable!!, 250)
+
+        } catch (e: Exception) {
+            hatayiDosyayaYaz(e)
+            removeOverlayFallback()
+        }
+    }
+
+    private fun removeOverlayFallback() {
+        try {
+            overlayPollingRunnable?.let { handler.removeCallbacks(it) }
+            overlayPollingRunnable = null
+            overlayView?.let { windowManager.removeView(it) }
+            overlayView = null
+        } catch (e: Exception) {
+            // ignore
+        }
+    }
+
     private fun triggerKeyboard() {
-        Log.e("FloatingService", "Triggering keyboard")
+        Log.e("FloatingService", "Triggering keyboard (legacy)")
         val imm = getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager
         imm.toggleSoftInput(InputMethodManager.SHOW_FORCED, 0)
     }
 
     override fun onDestroy() {
         super.onDestroy()
+        try { unregisterReceiver(overlayRequestReceiver) } catch (_: Exception) {}
+        removeOverlayFallback()
         if (::floatingButton.isInitialized) {
             try {
                 windowManager.removeView(floatingButton)
@@ -235,3 +345,4 @@ class FloatingService : Service() {
         }
     }
 }
+

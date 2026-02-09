@@ -54,14 +54,14 @@ class KeyboardTriggerAccessibilityService : AccessibilityService() {
                     }
                 }
                 if (!handled) {
-                    // No editable node found; start the fallback activity to show an invisible EditText
-                    android.util.Log.e("AccessibilityService", "No editable node; starting KeyboardShowActivity fallback")
-                    val imeActive = try { (getSystemService(INPUT_METHOD_SERVICE) as InputMethodManager).isAcceptingText() } catch (_: Exception) { false }
-                    val i = android.content.Intent(this@KeyboardTriggerAccessibilityService, KeyboardShowActivity::class.java).apply {
-                        addFlags(android.content.Intent.FLAG_ACTIVITY_NEW_TASK)
-                        putExtra("ime_active", imeActive)
+                    // No editable node found; ask FloatingService to show an overlay EditText instead of starting an Activity.
+                    android.util.Log.e("AccessibilityService", "No editable node; requesting overlay fallback from FloatingService")
+                    try {
+                        val b = android.content.Intent("com.universish.libre.keyboardtrigger.ACTION_REQUEST_OVERLAY").apply { setPackage(packageName) }
+                        sendBroadcast(b)
+                    } catch (e: Exception) {
+                        android.util.Log.e("AccessibilityService", "Failed to send overlay request: ${'$'}{e.message}")
                     }
-                    startActivity(i)
                 }
             } catch (e: Exception) {
                 android.util.Log.e("AccessibilityService", "triggerReceiver error: ${'$'}{e.message}")
@@ -85,14 +85,10 @@ class KeyboardTriggerAccessibilityService : AccessibilityService() {
     companion object {
         fun triggerKeyboard(context: android.content.Context) {
             try {
-                android.util.Log.e("AccessibilityService", "triggerKeyboard: starting KeyboardShowActivity")
-                val imm = context.getSystemService(android.content.Context.INPUT_METHOD_SERVICE) as android.view.inputmethod.InputMethodManager
-                val imeActive = try { imm.isAcceptingText() } catch (_: Exception) { false }
-                val intent = android.content.Intent(context, KeyboardShowActivity::class.java).apply {
-                    addFlags(android.content.Intent.FLAG_ACTIVITY_NEW_TASK)
-                    putExtra("ime_active", imeActive)
-                }
-                context.startActivity(intent)
+                // Request FloatingService overlay as fallback rather than launching an Activity
+                android.util.Log.e("AccessibilityService", "triggerKeyboard: sending overlay request to FloatingService")
+                val intent = android.content.Intent("com.universish.libre.keyboardtrigger.ACTION_REQUEST_OVERLAY").apply { setPackage(context.packageName) }
+                context.sendBroadcast(intent)
             } catch (e: Exception) {
                 android.util.Log.e("AccessibilityService", "triggerKeyboard error: ${e.message}")
                 e.printStackTrace()
