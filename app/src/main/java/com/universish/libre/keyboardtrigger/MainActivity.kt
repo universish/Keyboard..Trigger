@@ -160,15 +160,37 @@ class MainActivity : AppCompatActivity() {
         }
 
         val btnOverlay = Button(this).apply {
-            text = if (!overlay) "ÜSTTE GÖSTER İZNİ VER" else "ÜSTTE GÖSTER İZNİ VERİLDİ ✓"
             isEnabled = !overlay
-            if (overlay) setTextColor(android.graphics.Color.parseColor("#4CAF50"))
+            if (!overlay) {
+                text = "ÜSTTE GÖSTER İZNİ VER"
+                // default background
+            } else {
+                // show checkmark in custom color and bold, and set button background to #bbf3ae
+                val sb = android.text.SpannableStringBuilder("ÜSTTE GÖSTER İZNİ VERİLDİ ")
+                val check = "✓"
+                val start = sb.length
+                sb.append(check)
+                sb.setSpan(android.text.style.ForegroundColorSpan(android.graphics.Color.parseColor("#a2bfff")), start, start+1, android.text.Spanned.SPAN_EXCLUSIVE_EXCLUSIVE)
+                sb.setSpan(android.text.style.StyleSpan(android.graphics.Typeface.BOLD), start, start+1, android.text.Spanned.SPAN_EXCLUSIVE_EXCLUSIVE)
+                text = sb
+                setBackgroundColor(android.graphics.Color.parseColor("#bbf3ae"))
+            }
             setOnClickListener { requestOverlayPermission() }
         }
         val btnAccess = Button(this).apply {
-            text = if (!accessibility) "ERİŞİLEBİLİRLİK İZNİ VER" else "ERİŞİLEBİLİRLİK AKTİF ✓"
             isEnabled = !accessibility
-            if (accessibility) setTextColor(android.graphics.Color.parseColor("#4CAF50"))
+            if (!accessibility) {
+                text = "ERİŞİLEBİLİRLİK İZNİ VER"
+            } else {
+                val sb = android.text.SpannableStringBuilder("ERİŞİLEBİLİRLİK AKTİF ")
+                val check = "✓"
+                val start = sb.length
+                sb.append(check)
+                sb.setSpan(android.text.style.ForegroundColorSpan(android.graphics.Color.parseColor("#a2bfff")), start, start+1, android.text.Spanned.SPAN_EXCLUSIVE_EXCLUSIVE)
+                sb.setSpan(android.text.style.StyleSpan(android.graphics.Typeface.BOLD), start, start+1, android.text.Spanned.SPAN_EXCLUSIVE_EXCLUSIVE)
+                text = sb
+                setBackgroundColor(android.graphics.Color.parseColor("#bbf3ae"))
+            }
             setOnClickListener { requestAccessibilityPermission() }
         }
 
