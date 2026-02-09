@@ -9,4 +9,4 @@ Features:
 
 Repository: https://github.com/universish/Keyboard..Trigger
 
-Developer: universish (Saffet Yavuz)
+Developer: universish
