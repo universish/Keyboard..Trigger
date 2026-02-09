@@ -116,23 +116,13 @@ class FloatingService : Service() {
             notificationManager.createNotificationChannel(channel)
         }
 
-        // Create notification
+        // Create notification intent for later use (we start foreground in onStartCommand)
         val notificationIntent = Intent().apply {
             setClassName(this@FloatingService, "com.universish.libre.keyboardtrigger.MainActivity")
         }
         val pendingIntent = PendingIntent.getActivity(
             this, 0, notificationIntent, PendingIntent.FLAG_IMMUTABLE
         )
-
-        val notification = NotificationCompat.Builder(this, "keyboard_trigger_channel")
-            .setContentTitle("Keyboard Trigger")
-            .setContentText("Floating button is active")
-            .setSmallIcon(android.R.drawable.ic_dialog_info)
-            .setContentIntent(pendingIntent)
-            .build()
-
-        // Start foreground service FIRST
-        startForeground(1, notification)
 
         // GLOBAL HATA YAKALAYICI
         Thread.setDefaultUncaughtExceptionHandler { thread, e ->
@@ -151,7 +141,8 @@ class FloatingService : Service() {
             registerReceiver(selectionBubbleReceiver, selFilter)
 
             startPermissionMonitoring()
-            baslat()
+            // Defer heavy UI work to onStartCommand to ensure startForeground is called first
+            // baslat() will be posted from onStartCommand
         } catch (e: Exception) {
             hatayiDosyayaYaz(e)
             Toast.makeText(this, "HATA OLUŞTU! Dosyaya yazıldı.", Toast.LENGTH_LONG).show()
@@ -513,6 +504,46 @@ class FloatingService : Service() {
             val nm = getSystemService(NotificationManager::class.java)
             nm.cancel(3)
         } catch (_: Exception) {}
+    }
+
+    override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
+        try {
+            val notificationManager = getSystemService(NotificationManager::class.java)
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                val channel = NotificationChannel(
+                    "keyboard_trigger_channel",
+                    "Keyboard Trigger Service",
+                    NotificationManager.IMPORTANCE_LOW
+                )
+                notificationManager.createNotificationChannel(channel)
+            }
+
+            val notificationIntent = Intent().apply {
+                setClassName(this@FloatingService, "com.universish.libre.keyboardtrigger.MainActivity")
+            }
+            val pendingIntent = PendingIntent.getActivity(this, 0, notificationIntent, PendingIntent.FLAG_IMMUTABLE)
+
+            val notification = NotificationCompat.Builder(this, "keyboard_trigger_channel")
+                .setContentTitle("Keyboard Trigger")
+                .setContentText("Floating button is active")
+                .setSmallIcon(android.R.drawable.ic_dialog_info)
+                .setContentIntent(pendingIntent)
+                .build()
+
+            // Ensure we call startForeground promptly as required by platform
+            try {
+                startForeground(1, notification)
+            } catch (e: Exception) {
+                hatayiDosyayaYaz(e)
+            }
+
+            // Post the heavy UI add operation to the main thread event queue to avoid blocking
+            handler.post { try { baslat() } catch (e: Exception) { hatayiDosyayaYaz(e) } }
+        } catch (e: Exception) {
+            hatayiDosyayaYaz(e)
+        }
+
+        return START_STICKY
     }
 
     override fun onDestroy() {

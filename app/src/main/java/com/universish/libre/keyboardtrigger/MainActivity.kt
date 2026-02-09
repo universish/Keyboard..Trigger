@@ -88,6 +88,13 @@ class MainActivity : AppCompatActivity() {
             setPadding(30, 30, 30, 30)
         }
 
+        // Add About button
+        val btnAbout = Button(this).apply {
+            text = "Hakkında"
+            setOnClickListener { startActivity(Intent(this@MainActivity, AboutActivity::class.java)) }
+        }
+        layout.addView(btnAbout)
+
         val info = TextView(this).apply {
             text = buildString {
                 append("Uygulama çalışması için şu izinler gereklidir:\n\n")
