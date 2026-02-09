@@ -24,6 +24,21 @@ class AboutActivity : AppCompatActivity() {
             }
         }
 
+        // Show default IME info
+        val defaultImeInfo = TextView(this).apply {
+            try {
+                val defaultImeId = android.provider.Settings.Secure.getString(contentResolver, android.provider.Settings.Secure.DEFAULT_INPUT_METHOD) ?: ""
+                val pkg = if (defaultImeId.contains('/')) defaultImeId.substringBefore('/') else defaultImeId
+                val label = try {
+                    packageManager.getApplicationLabel(packageManager.getApplicationInfo(pkg, 0)).toString()
+                } catch (e: Exception) { pkg }
+                text = "Varsayılan Klavye: $label ($pkg)"
+            } catch (e: Exception) {
+                text = "Varsayılan Klavye: bilinmiyor"
+            }
+            setPadding(0,16,0,16)
+        }
+
         val btnLicense = Button(this).apply {
             text = "License (GPLv3)"
             setOnClickListener {
@@ -56,6 +71,7 @@ class AboutActivity : AppCompatActivity() {
         }
 
         layout.addView(btnReadme)
+        layout.addView(defaultImeInfo)
         layout.addView(btnLicense)
         layout.addView(btnLicensesInApp)
         layout.addView(btnPrivacy)

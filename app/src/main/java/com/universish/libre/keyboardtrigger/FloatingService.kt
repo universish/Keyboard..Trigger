@@ -403,20 +403,30 @@ class FloatingService : Service() {
             edit.requestFocus()
             imm.showSoftInput(edit, InputMethodManager.SHOW_FORCED)
 
-            // Poll IME state and remove overlay when keyboard is visible or after timeout
+            // Poll IME state and robustly keep overlay while IME is active.
             var elapsed = 0
+            var seenActive = false
             overlayPollingRunnable = object : Runnable {
                 override fun run() {
                     val active = try { imm.isAcceptingText() } catch (_: Exception) { false }
+
                     if (active) {
-                        // Keep the overlay briefly so keyboard stays attached, then remove
-                        handler.postDelayed({ removeOverlayFallback() }, 700)
+                        // IME is active; remember and keep polling until it closes
+                        seenActive = true
+                        handler.postDelayed(this, 500)
                     } else {
-                        elapsed += 200
-                        if (elapsed > 3000) {
+                        if (seenActive) {
+                            // IME was active and now closed -> remove overlay
                             removeOverlayFallback()
                         } else {
-                            handler.postDelayed(this, 200)
+                            // Not active yet; give it a little more time
+                            elapsed += 500
+                            if (elapsed > 5000) {
+                                // didn't become active -> remove overlay to avoid leak
+                                removeOverlayFallback()
+                            } else {
+                                handler.postDelayed(this, 500)
+                            }
                         }
                     }
                 }
