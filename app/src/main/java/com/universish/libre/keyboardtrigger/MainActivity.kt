@@ -71,11 +71,12 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun showPermissionUI(overlay: Boolean, accessibility: Boolean) {
+        val prefs = getSharedPreferences("keyboard_trigger_prefs", MODE_PRIVATE)
         val layout = LinearLayout(this).apply {
             orientation = LinearLayout.VERTICAL
             gravity = Gravity.CENTER
             setBackgroundColor(Color.WHITE)
-            setPadding(50, 50, 50, 50)
+            setPadding(30, 30, 30, 30)
         }
 
         val info = TextView(this).apply {
@@ -88,24 +89,54 @@ class MainActivity : AppCompatActivity() {
             textSize = 16f
             setTextColor(Color.BLACK)
             gravity = Gravity.CENTER
-            setPadding(0, 0, 0, 30)
+            setPadding(0, 0, 0, 20)
+        }
+
+        // Overlay toggle
+        val overlaySwitch = android.widget.Switch(this).apply {
+            text = "Overlay fallback (opsiyonel)"
+            isChecked = prefs.getBoolean("overlay_fallback_enabled", true)
+            setOnCheckedChangeListener { _, checked ->
+                prefs.edit().putBoolean("overlay_fallback_enabled", checked).apply()
+            }
+            setPadding(0, 10, 0, 10)
+        }
+
+        // Selection bubble toggle
+        val selectionSwitch = android.widget.Switch(this).apply {
+            text = "Seçim balonu (opsiyonel)"
+            isChecked = prefs.getBoolean("selection_bubble_enabled", false)
+            setOnCheckedChangeListener { _, checked ->
+                prefs.edit().putBoolean("selection_bubble_enabled", checked).apply()
+            }
+            setPadding(0, 10, 0, 10)
         }
 
         val btnOverlay = Button(this).apply {
-            text = if (!overlay) "ÜSTTE GÖSTER İZNİ VER" else "ÜSTTE GÖSTER İZNİ VERİLDİ"
+            text = if (!overlay) "ÜSTTE GÖSTER İZNİ VER" else "ÜSTTE GÖSTER İZNİ VERİLDİ ✓"
             isEnabled = !overlay
+            if (overlay) setTextColor(android.graphics.Color.parseColor("#4CAF50"))
             setOnClickListener { requestOverlayPermission() }
         }
         val btnAccess = Button(this).apply {
-            text = if (!accessibility) "ERİŞİLEBİLİRLİK İZNİ VER" else "ERİŞİLEBİLİRLİK AKTİF"
+            text = if (!accessibility) "ERİŞİLEBİLİRLİK İZNİ VER" else "ERİŞİLEBİLİRLİK AKTİF ✓"
             isEnabled = !accessibility
+            if (accessibility) setTextColor(android.graphics.Color.parseColor("#4CAF50"))
             setOnClickListener { requestAccessibilityPermission() }
+        }
+
+        val btnDebug = Button(this).apply {
+            text = "Hata raporu oluştur & paylaş"
+            setOnClickListener { createAndShareDebugReport() }
         }
 
         layout.removeAllViews()
         layout.addView(info)
+        layout.addView(overlaySwitch)
+        layout.addView(selectionSwitch)
         layout.addView(btnOverlay)
         layout.addView(btnAccess)
+        layout.addView(btnDebug)
         setContentView(layout)
     }
 
@@ -126,6 +157,62 @@ class MainActivity : AppCompatActivity() {
         } catch (e: Exception) {
             Toast.makeText(this, "Ayarlar açılamadı", Toast.LENGTH_SHORT).show()
         }
+    }
+
+    private fun createAndShareDebugReport() {
+        // Generate a sanitized log report and prompt user to share via email
+        Thread {
+            try {
+                val pkg = packageName
+                val proc = Runtime.getRuntime().exec(arrayOf("logcat", "-d", "-v", "time", "FloatingService:*", "AccessibilityService:*", "KeyboardShowActivity:*", "*:S"))
+                val reader = proc.inputStream.bufferedReader()
+                val raw = reader.readText()
+                reader.close()
+
+                // Sanitize: remove likely PII like emails, phone numbers, long hex tokens
+                var sanitized = raw
+                // emails
+                sanitized = sanitized.replace(Regex("[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\\.[A-Za-z]{2,}"), "[REDACTED_EMAIL]")
+                // phones (simple)
+                sanitized = sanitized.replace(Regex("\\+?\\d[\\d \-()]{6,}") , "[REDACTED_PHONE]")
+                // long hex/base64 tokens
+                sanitized = sanitized.replace(Regex("(?i)[A-F0-9]{16,}"), "[REDACTED_HEX]")
+                sanitized = sanitized.replace(Regex("[A-Za-z0-9-_]{32,}"), "[REDACTED_TOKEN]")
+
+                val ts = java.time.format.DateTimeFormatter.ofPattern("yyyyMMdd_HHmmss").format(java.time.LocalDateTime.now())
+                val fname = "keyboard_trigger_report_$ts.txt"
+                val f = java.io.File(cacheDir, fname)
+                f.writeText("Keyboard Trigger Debug Report\nTime: $ts\nPackage: $pkg\n\n--- LOGS ---\n\n" + sanitized)
+
+                // Ask user to share via email
+                runOnUiThread {
+                    val builder = androidx.appcompat.app.AlertDialog.Builder(this)
+                    builder.setTitle("Hata raporu hazır")
+                    builder.setMessage("Hata raporu oluşturuldu. Kişisel bilgiler kaldırıldı. E-posta ile paylaşmak ister misiniz?")
+                    builder.setPositiveButton("Evet") { _, _ ->
+                        try {
+                            // use FileProvider
+                            val uri = androidx.core.content.FileProvider.getUriForFile(this, "$packageName.fileprovider", f)
+                            val i = Intent(Intent.ACTION_SEND).apply {
+                                type = "text/plain"
+                                putExtra(Intent.EXTRA_SUBJECT, "Keyboard Trigger Debug Report")
+                                putExtra(Intent.EXTRA_TEXT, "Lütfen hata raporunu inceleyin.")
+                                putExtra(Intent.EXTRA_STREAM, uri)
+                                addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+                            }
+                            startActivity(Intent.createChooser(i, "Hata raporunu paylaş"))
+                        } catch (e: Exception) {
+                            Toast.makeText(this, "E-posta açılamadı: ${e.message}", Toast.LENGTH_SHORT).show()
+                        }
+                    }
+                    builder.setNegativeButton("Hayır", null)
+                    builder.show()
+                }
+
+            } catch (e: Exception) {
+                runOnUiThread { Toast.makeText(this, "Hata raporu oluşturulamadı: ${e.message}", Toast.LENGTH_SHORT).show() }
+            }
+        }.start()
     }
 
     private fun startFloatingService() {

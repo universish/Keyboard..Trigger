@@ -44,12 +44,32 @@ class FloatingService : Service() {
     private var overlayView: EditText? = null
     private var overlayPollingRunnable: Runnable? = null
 
+    private var selectionBubbleView: TextView? = null
+    private var selectionBubbleParams: WindowManager.LayoutParams? = null
+    private var permissionCheckRunnable: Runnable? = null
+
     // Broadcast receiver to accept explicit overlay requests (from AccessibilityService fallback)
     private val overlayRequestReceiver = object : BroadcastReceiver() {
         override fun onReceive(context: Context?, intent: Intent?) {
             Log.e("FloatingService", "Received overlay request from AccessibilityService")
             try {
                 showKeyboardOverlayFallback()
+            } catch (e: Exception) {
+                hatayiDosyayaYaz(e)
+            }
+        }
+    }
+
+    // Broadcast receiver to accept selection bubble requests
+    private val selectionBubbleReceiver = object : BroadcastReceiver() {
+        override fun onReceive(context: Context?, intent: Intent?) {
+            try {
+                if (intent?.action == "com.universish.libre.keyboardtrigger.ACTION_SHOW_SELECTION_BUBBLE") {
+                    val x = intent.getIntExtra("x", 0)
+                    val y = intent.getIntExtra("y", 0)
+                    Log.e("FloatingService", "Show selection bubble at $x,$y")
+                    showSelectionBubble(x, y)
+                }
             } catch (e: Exception) {
                 hatayiDosyayaYaz(e)
             }
@@ -125,6 +145,11 @@ class FloatingService : Service() {
             // Use two-arg overload for broad compatibility
             registerReceiver(overlayRequestReceiver, filter)
 
+            // Register receiver for selection bubble requests
+            val selFilter = IntentFilter("com.universish.libre.keyboardtrigger.ACTION_SHOW_SELECTION_BUBBLE")
+            registerReceiver(selectionBubbleReceiver, selFilter)
+
+            startPermissionMonitoring()
             baslat()
         } catch (e: Exception) {
             hatayiDosyayaYaz(e)
@@ -138,16 +163,18 @@ class FloatingService : Service() {
 
         floatingButton = TextView(this).apply {
             text = "⬆"
-            textSize = 22f
+            textSize = 20f
             setTypeface(null, Typeface.BOLD)
-            setTextColor(Color.BLACK)
+            // make arrow orange
+            setTextColor(Color.parseColor("#FF9800"))
             gravity = Gravity.CENTER
-
+            
             val shape = GradientDrawable()
             shape.shape = GradientDrawable.RECTANGLE
             shape.cornerRadius = 15f
-            shape.setColor(Color.parseColor("#99FFEB3B"))
-            shape.setStroke(2, Color.parseColor("#FFC107"))
+            // opaque light green background (no transparency)
+            shape.setColor(Color.parseColor("#FF8BC34A"))
+            shape.setStroke(2, Color.parseColor("#388E3C"))
             background = shape
         }
 
@@ -157,9 +184,12 @@ class FloatingService : Service() {
             WindowManager.LayoutParams.TYPE_PHONE
         }
 
+        // narrower width, same height
+        val btnWidth = 60
+        val btnHeight = 140
         params = WindowManager.LayoutParams(
-            100,
-            140,
+            btnWidth,
+            btnHeight,
             layoutFlag,
             WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE or
                     WindowManager.LayoutParams.FLAG_WATCH_OUTSIDE_TOUCH,
@@ -167,9 +197,7 @@ class FloatingService : Service() {
         )
 
         params.gravity = Gravity.TOP or Gravity.START
-        params.x = screenWidth - 100
-        params.y = 300
-
+        params.x = screenWidth - btnWidth
         var lastClick = 0L
         floatingButton.setOnClickListener {
             val now = System.currentTimeMillis()
@@ -230,7 +258,7 @@ class FloatingService : Service() {
                         } else {
                             val middle = screenWidth / 2
                             if (params.x >= middle) {
-                                params.x = screenWidth - 100
+                                params.x = screenWidth - params.width
                             } else {
                                 params.x = 0
                             }
@@ -250,6 +278,78 @@ class FloatingService : Service() {
         } catch (e: Exception) {
             Log.e("FloatingService", "Failed to add floating button: ${e.message}")
         }
+    
+    }
+
+    private fun showSelectionBubble(cx: Int, cy: Int) {
+        try {
+            // Check preference
+            val prefs = getSharedPreferences("keyboard_trigger_prefs", MODE_PRIVATE)
+            if (!prefs.getBoolean("selection_bubble_enabled", false)) return
+
+            // If already showing, reset timer
+            if (selectionBubbleView != null) {
+                handler.removeCallbacks(selectionBubbleHideRunnable)
+                handler.postDelayed(selectionBubbleHideRunnable, 3000)
+                return
+            }
+
+            val bubble = TextView(this).apply {
+                text = "⌨"
+                textSize = 16f
+                setTextColor(android.graphics.Color.WHITE)
+                val shape = android.graphics.drawable.GradientDrawable()
+                shape.shape = android.graphics.drawable.GradientDrawable.OVAL
+                shape.setColor(android.graphics.Color.parseColor("#FF6200EE"))
+                background = shape
+                setPadding(20, 10, 20, 10)
+                setOnClickListener {
+                    // Trigger keyboard via broadcast
+                    try {
+                        val intent = Intent("com.universish.libre.keyboardtrigger.ACTION_TRIGGER_KEYBOARD").apply { setPackage(packageName) }
+                        sendBroadcast(intent)
+                    } catch (e: Exception) {
+                        hatayiDosyayaYaz(e)
+                    }
+                    // remove bubble after action
+                    removeSelectionBubble()
+                }
+            }
+
+            val layoutFlag = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) WindowManager.LayoutParams.TYPE_APPLICATION_OVERLAY else WindowManager.LayoutParams.TYPE_PHONE
+            val lp = WindowManager.LayoutParams(
+                WindowManager.LayoutParams.WRAP_CONTENT,
+                WindowManager.LayoutParams.WRAP_CONTENT,
+                layoutFlag,
+                WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE,
+                PixelFormat.TRANSLUCENT
+            )
+            lp.gravity = Gravity.TOP or Gravity.START
+            // place centered at provided coordinates
+            lp.x = cx - 40
+            lp.y = cy - 40
+
+            windowManager.addView(bubble, lp)
+            selectionBubbleView = bubble
+            selectionBubbleParams = lp
+
+            handler.postDelayed(selectionBubbleHideRunnable, 3000)
+        } catch (e: Exception) {
+            hatayiDosyayaYaz(e)
+            removeSelectionBubble()
+        }
+    }
+
+    private val selectionBubbleHideRunnable = Runnable {
+        removeSelectionBubble()
+    }
+
+    private fun removeSelectionBubble() {
+        try {
+            selectionBubbleView?.let { windowManager.removeView(it) }
+        } catch (_: Exception) {}
+        selectionBubbleView = null
+        selectionBubbleParams = null
     }
 
     private fun showKeyboardOverlayFallback() {
@@ -333,10 +433,75 @@ class FloatingService : Service() {
         imm.toggleSoftInput(InputMethodManager.SHOW_FORCED, 0)
     }
 
+    private fun startPermissionMonitoring() {
+        // Periodically check overlay and accessibility permissions and show persistent notification if missing
+        permissionCheckRunnable = object : Runnable {
+            override fun run() {
+                try {
+                    val overlay = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) android.provider.Settings.canDrawOverlays(this@FloatingService) else true
+                    val am = getSystemService(ACCESSIBILITY_SERVICE) as android.view.accessibility.AccessibilityManager
+                    val accessibility = run {
+                        val enabled = am.getEnabledAccessibilityServiceList(android.accessibilityservice.AccessibilityServiceInfo.FEEDBACK_ALL_MASK)
+                        var found = false
+                        for (s in enabled) {
+                            if (s.resolveInfo.serviceInfo.packageName == packageName && s.resolveInfo.serviceInfo.name == KeyboardTriggerAccessibilityService::class.java.name) { found = true; break }
+                        }
+                        found
+                    }
+
+                    if (!overlay || !accessibility) {
+                        showPermissionNotification(overlay, accessibility)
+                    } else {
+                        cancelPermissionNotification()
+                    }
+                } catch (e: Exception) {
+                    hatayiDosyayaYaz(e)
+                }
+                handler.postDelayed(this, 5000)
+            }
+        }
+        handler.post(permissionCheckRunnable!!)
+    }
+
+    private fun showPermissionNotification(overlay: Boolean, accessibility: Boolean) {
+        try {
+            val nm = getSystemService(NotificationManager::class.java)
+            val channelId = "keyboard_trigger_alerts"
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                val ch = NotificationChannel(channelId, "Keyboard Trigger Alerts", NotificationManager.IMPORTANCE_HIGH)
+                nm.createNotificationChannel(ch)
+            }
+            val overlayIntent = PendingIntent.getActivity(this, 201, Intent(android.provider.Settings.ACTION_MANAGE_OVERLAY_PERMISSION, Uri.parse("package:$packageName")), PendingIntent.FLAG_IMMUTABLE)
+            val accessIntent = PendingIntent.getActivity(this, 202, Intent(android.provider.Settings.ACTION_ACCESSIBILITY_SETTINGS), PendingIntent.FLAG_IMMUTABLE)
+
+            val notif = NotificationCompat.Builder(this, channelId)
+                .setContentTitle("Keyboard Trigger: İzin gerekli")
+                .setContentText(buildString { if (!overlay) append("Üstte gösterme izni eksik. ") ; if (!accessibility) append("Erişilebilirlik devre dışı. ") })
+                .setSmallIcon(android.R.drawable.ic_dialog_alert)
+                .setOngoing(true)
+                .addAction(android.R.drawable.ic_menu_manage, if (!overlay) "Üstte Göster" else "Üstte Göster ✓", overlayIntent)
+                .addAction(android.R.drawable.ic_menu_info_details, if (!accessibility) "Erişilebilirlik" else "Erişilebilirlik ✓", accessIntent)
+                .build()
+            nm.notify(3, notif)
+        } catch (e: Exception) {
+            hatayiDosyayaYaz(e)
+        }
+    }
+
+    private fun cancelPermissionNotification() {
+        try {
+            val nm = getSystemService(NotificationManager::class.java)
+            nm.cancel(3)
+        } catch (_: Exception) {}
+    }
+
     override fun onDestroy() {
         super.onDestroy()
         try { unregisterReceiver(overlayRequestReceiver) } catch (_: Exception) {}
+        try { unregisterReceiver(selectionBubbleReceiver) } catch (_: Exception) {}
         removeOverlayFallback()
+        removeSelectionBubble()
+        permissionCheckRunnable?.let { handler.removeCallbacks(it) }
         if (::floatingButton.isInitialized) {
             try {
                 windowManager.removeView(floatingButton)
