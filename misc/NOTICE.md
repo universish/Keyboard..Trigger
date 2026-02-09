@@ -1,4 +1,4 @@
-NOTICE
+# NOTICE
 
 This application contains code and components licensed under various open source licenses.
 
