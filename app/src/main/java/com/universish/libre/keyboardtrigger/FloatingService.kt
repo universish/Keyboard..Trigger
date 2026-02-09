@@ -59,6 +59,7 @@ class FloatingService : Service() {
     private lateinit var floatingButton: TextView
     private lateinit var params: WindowManager.LayoutParams
     private var screenWidth = 0
+    private var floatingButtonAdded = false
 
     private val handler = Handler(Looper.getMainLooper())
     private var overlayView: EditText? = null
@@ -171,6 +172,21 @@ class FloatingService : Service() {
     private fun baslat() {
         windowManager = getSystemService(WINDOW_SERVICE) as WindowManager
         screenWidth = Resources.getSystem().displayMetrics.widthPixels
+
+        // Prevent duplicate floating buttons being added if baslat() is called multiple times
+        try {
+            if (::floatingButton.isInitialized) {
+                try {
+                    if (floatingButton.parent != null) {
+                        Log.e("FloatingService", "Floating button already present; skipping baslat()")
+                        return
+                    } else {
+                        // If the previous instance exists but is not attached, try to clean it up
+                        try { windowManager.removeViewImmediate(floatingButton) } catch (_: Exception) {}
+                    }
+                } catch (_: Exception) {}
+            }
+        } catch (_: Exception) {}
 
         floatingButton = TextView(this).apply {
             text = "⬆"
@@ -285,6 +301,7 @@ class FloatingService : Service() {
         Log.e("FloatingService", "Adding floating button to window")
         try {
             windowManager.addView(floatingButton, params)
+            floatingButtonAdded = true
             Log.e("FloatingService", "Floating button added successfully")
         } catch (e: Exception) {
             Log.e("FloatingService", "Failed to add floating button: ${e.message}")
@@ -584,9 +601,10 @@ class FloatingService : Service() {
         permissionCheckRunnable?.let { handler.removeCallbacks(it) }
         if (::floatingButton.isInitialized) {
             try {
-                windowManager.removeView(floatingButton)
+                if (floatingButton.parent != null) windowManager.removeView(floatingButton)
             } catch (e: Exception) {
             }
+            floatingButtonAdded = false
         }
     }
 }
