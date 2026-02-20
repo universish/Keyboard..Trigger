@@ -275,21 +275,26 @@ class FloatingService : Service() {
             }
         } catch (_: Exception) {}
 
+        // decide arrow color based on theme preference
+        val prefs = getSharedPreferences("keyboard_trigger_prefs", MODE_PRIVATE)
+        val themePref = prefs.getString("theme","light") ?: "light"
+        val arrowColor = if (themePref == "dark") Color.parseColor("#ffeeaa") else Color.parseColor("#bbf3ae")
+
         floatingButton = TextView(this).apply {
             text = "⬆"
-            textSize = 20f
+            textSize = 40f   // bigger arrow while keeping button size constant
             setTypeface(null, Typeface.BOLD)
             gravity = Gravity.CENTER
             
             val shape = GradientDrawable()
             shape.shape = GradientDrawable.RECTANGLE
             shape.cornerRadius = 15f
-            // choose a calm blue background
+            // choose a calm blue background (same for both themes for now)
             shape.setColor(Color.parseColor("#FF2196F3"))
             shape.setStroke(2, Color.parseColor("#1976D2"))
             background = shape
-            // arrow will be white
-            setTextColor(Color.WHITE)
+            // arrow color chosen above (not plain white)
+            setTextColor(arrowColor)
         }
 
         val layoutFlag = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
@@ -735,6 +740,13 @@ class FloatingService : Service() {
                 }
             } catch (_: Exception) {}
 
+            // ensure any previous button is removed so updated dimensions/colors apply
+            try {
+                if (::floatingButton.isInitialized && floatingButton.parent != null) {
+                    windowManager.removeView(floatingButton)
+                    floatingButtonAdded = false
+                }
+            } catch (_: Exception) {}
             // Post the heavy UI add operation to the main thread event queue to avoid blocking
             handler.post { try { baslat() } catch (e: Exception) { hatayiDosyayaYaz(e) } }
         } catch (e: Exception) {

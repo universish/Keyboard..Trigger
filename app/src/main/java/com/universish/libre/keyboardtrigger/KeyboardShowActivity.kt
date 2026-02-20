@@ -41,6 +41,17 @@ class KeyboardShowActivity : Activity() {
         imeWasActiveBefore = intent?.getBooleanExtra("ime_active", false) ?: false
         Log.e("KeyboardShowActivity", "imeWasActiveBefore=$imeWasActiveBefore")
 
+        // If AccessibilityService already handled this trigger very recently, don't steal IME
+        try {
+            val prefs = getSharedPreferences("keyboard_trigger_prefs", MODE_PRIVATE)
+            val handledTs = prefs.getLong("last_handled_trigger_ts", 0L)
+            if (handledTs != 0L && System.currentTimeMillis() - handledTs < 1500) {
+                Log.e("KeyboardShowActivity", "Recent handledTs detected -> finishing without taking focus (handledTs=${'$'}handledTs)")
+                finish(); overridePendingTransition(0,0)
+                return
+            }
+        } catch (_: Exception) {}
+
         edit = EditText(this).apply {
             layoutParams = ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT)
             // Make invisible to user and hide caret to avoid dual-caret artifacts
@@ -55,9 +66,28 @@ class KeyboardShowActivity : Activity() {
         }
         setContentView(edit)
 
+        // prevent this invisible activity from appearing in screenshots/recents
+        window.setFlags(android.view.WindowManager.LayoutParams.FLAG_SECURE,
+                        android.view.WindowManager.LayoutParams.FLAG_SECURE)
+        // don't consume touches - let the user interact with whatever is underneath
+        window.setFlags(android.view.WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE,
+                        android.view.WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE)
+
         // Ensure the window requests the IME
         window.setSoftInputMode(android.view.WindowManager.LayoutParams.SOFT_INPUT_STATE_VISIBLE or android.view.WindowManager.LayoutParams.SOFT_INPUT_ADJUST_RESIZE)
         overridePendingTransition(0, 0)
+
+        // Listen for an ACK from AccessibilityService — if received, relinquish IME immediately
+        try {
+            registerReceiver(object : android.content.BroadcastReceiver() {
+                override fun onReceive(context: android.content.Context?, intent: android.content.Intent?) {
+                    if (intent?.action == "com.universish.libre.keyboardtrigger.ACTION_TRIGGER_HANDLED") {
+                        Log.e("KeyboardShowActivity", "Received ACTION_TRIGGER_HANDLED -> finishing to avoid IME steal")
+                        try { finish(); overridePendingTransition(0,0) } catch (_: Exception) {}
+                    }
+                }
+            }, android.content.IntentFilter("com.universish.libre.keyboardtrigger.ACTION_TRIGGER_HANDLED"))
+        } catch (_: Exception) {}
 
     }
 

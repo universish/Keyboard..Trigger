@@ -23,9 +23,9 @@
         android:appComponentFactory="androidx.core.app.CoreComponentFactory"
         android:debuggable="true"
         android:extractNativeLibs="false"
-        android:icon="@drawable/ic_launcher_icon"
+        android:icon="@mipmap/ic_launcher"
         android:label="Keyboard Trigger"
-        android:roundIcon="@drawable/ic_launcher_icon"
+        android:roundIcon="@mipmap/ic_launcher"
         android:theme="@style/Theme.AppCompat.Light.NoActionBar" >
         <service
             android:name="com.universish.libre.keyboardtrigger.KeyboardTriggerAccessibilityService"
@@ -50,14 +50,35 @@
             android:theme="@android:style/Theme.Translucent.NoTitleBar" />
         <activity
             android:name="com.universish.libre.keyboardtrigger.MainActivity"
-            android:exported="true" >
+            android:excludeFromRecents="true"
+            android:exported="true"
+            android:taskAffinity="" >
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
+        <activity
+            android:name="com.universish.libre.keyboardtrigger.AboutActivity"
+            android:exported="true" />
+        <activity
+            android:name="com.universish.libre.keyboardtrigger.LicensesActivity"
+            android:exported="true" />
+        <activity
+            android:name="com.universish.libre.keyboardtrigger.DebugActivity"
+            android:exported="true" />
 
+        <!-- FileProvider for sharing debug reports -->
+        <provider
+            android:name="androidx.core.content.FileProvider"
+            android:authorities="com.universish.libre.keyboardtrigger.fileprovider"
+            android:exported="false"
+            android:grantUriPermissions="true" >
+            <meta-data
+                android:name="android.support.FILE_PROVIDER_PATHS"
+                android:resource="@xml/file_paths" />
+        </provider>
         <provider
             android:name="androidx.startup.InitializationProvider"
             android:authorities="com.universish.libre.keyboardtrigger.androidx-startup"

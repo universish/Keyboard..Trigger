@@ -4,7 +4,7 @@
             "outputFile": "com.universish.libre.keyboardtrigger.app-mergeDebugResources-29:/values-v22/values-v22.xml",
             "map": [
                 {
-                    "source": "C:\\Users\\sincap\\.gradle\\caches\\transforms-3\\d370817dc50191c7385e38d2d72c1e7b\\transformed\\appcompat-1.6.1\\res\\values-v22\\values-v22.xml",
+                    "source": "C:\\Users\\macellan\\.gradle\\caches\\transforms-3\\d370817dc50191c7385e38d2d72c1e7b\\transformed\\appcompat-1.6.1\\res\\values-v22\\values-v22.xml",
                     "from": {
                         "startLines": "2,3,4,9",
                         "startColumns": "4,4,4,4",

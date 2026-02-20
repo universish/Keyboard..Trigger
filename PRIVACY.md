@@ -7,4 +7,3 @@ This project is free, libre, privacy-focused and open-source.
 - Local data: logs and debug reports are stored locally; debug reports are sanitized (emails, phone numbers, tokens masked) before user shares them manually.
 
 If you have concerns, open an issue at the repository and we'll address them.
-

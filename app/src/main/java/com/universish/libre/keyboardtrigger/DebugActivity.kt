@@ -25,6 +25,12 @@ class DebugActivity : Activity() {
     private var step = 0
     private var sanitizedReport: File? = null
 
+    private val prefs by lazy { getSharedPreferences("keyboard_trigger_prefs", MODE_PRIVATE) }
+    private fun lang(en: String, tr: String): String {
+        val l = prefs.getString("language", "en")
+        return if (l == "tr") tr else en
+    }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         buildUi()
@@ -68,23 +74,23 @@ class DebugActivity : Activity() {
 
     private fun showStepInstructions() {
         step = 0
-        text.text = "Lütfen aşağıdaki talimatları okuyun:\n" +
-                "1. Aşağıdaki 'İleri' düğmesine basın.\n" +
-                "2. Uygulamayı normal şekilde kullanarak testi yapın.\n" +
-                "3. Hatanın tekrar oluşmasını sağlayın.\n" +
-                "4. Hata meydana geldiğinde 'Yaptığım test bitti' düğmesine basın." 
-        btnNext.text = "İleri"
+        text.text = lang(
+            "Please read the following instructions:\n1. Press the 'Next' button below.\n2. Use the app and reproduce the issue.\n3. Once the problem occurs again, press 'My test is done'.",
+            "Lütfen aşağıdaki talimatları okuyun:\n1. Aşağıdaki 'İleri' düğmesine basın.\n2. Uygulamayı normal şekilde kullanarak testi yapın.\n3. Hatanın tekrar oluşmasını sağlayın.\n4. Hata meydana geldiğinde 'Yaptığım test bitti' düğmesine basın."
+        )
+        btnNext.text = lang("Next","İleri")
         btnFinish.visibility = Button.GONE
     }
 
     private fun showStepTest() {
         step = 1
-        text.text = "Testi gerçekleştirin:\n" +
-                "• Uygulamayı kullanın ve hatayı tetikleyin.\n" +
-                "• Hata tekrar oluştuğunda 'Yaptığım test bitti' düğmesine basın."
+        text.text = lang(
+            "Perform the test:\n• Use the app and trigger the issue.\n• When the problem recurs, press 'My test is done'.",
+            "Testi gerçekleştirin:\n• Uygulamayı kullanın ve hatayı tetikleyin.\n• Hata tekrar oluştuğunda 'Yaptığım test bitti' düğmesine basın."
+        )
         btnNext.visibility = Button.GONE
         btnFinish.visibility = Button.VISIBLE
-        btnFinish.text = "Yaptığım test bitti"
+        btnFinish.text = lang("My test is done","Yaptığım test bitti")
     }
 
     private fun beginLogCollection() {
@@ -141,14 +147,12 @@ class DebugActivity : Activity() {
 
     private fun showFinalScreen() {
         step = 2
-        text.text = "İşlem tamamlandı.\n" +
-                "Kayıtlar Key-Trigger klasörüne kaydedildi.\n" +
-                "Lütfen dosyaları açıp kişisel bilgilerinizin (e-posta, telefon, gizli veriler) silindiğinden emin olun.\n" +
-                "Aşağıdaki düğmeye basmak, loglarınızı incelemem ve sorunu araştırmam için uygulama geliştiricisine göndermeyi kabul ettiğiniz anlamına gelir.\n" +
-                "Bu işlem sırasında kişisel verileriniz silinmiş ve gizliliğiniz korunmuştur.\n\n" +
-                "Onaylayıp e-posta penceresini açmak için 'Onay veriyorum' butonuna dokunun."
+        text.text = lang(
+            "Process complete.\nLogs have been saved to the Key-Trigger folder.\nPlease review the files and ensure your personal data (email, phone, etc.) has been removed.\nPress the button below to send the sanitized logs to the developer. By doing so you consent to sharing non-personal information and agree to the terms of this procedure.",
+            "İşlem tamamlandı.\nKayıtlar Key-Trigger klasörüne kaydedildi.\nLütfen dosyaları açıp kişisel bilgilerinizin (e-posta, telefon, gizli veriler) silindiğinden emin olun.\nAşağıdaki düğmeye basmak, loglarınızı incelemem ve sorunu araştırmam için uygulama geliştiricisine göndermeyi kabul ettiğiniz anlamına gelir.\nBu işlem sırasında kişisel verileriniz silinmiş ve gizliliğiniz korunmuştur.\n\nOnaylayıp e-posta penceresini açmak için 'Onay veriyorum' butonuna dokunun."
+        )
         btnNext.visibility = Button.VISIBLE
-        btnNext.text = "Onay veriyorum"
+        btnNext.text = lang("I consent","Onay veriyorum")
     }
 
     private fun sendEmailWithReport() {
@@ -160,15 +164,15 @@ class DebugActivity : Activity() {
                 putExtra(Intent.EXTRA_EMAIL, arrayOf("universish@tutamail.com"))
                 putExtra(Intent.EXTRA_SUBJECT, "[Hata Raporu] Keyboard Trigger – lütfen kısa başlık ekleyin")
                 putExtra(Intent.EXTRA_TEXT, buildString {
-                    append("=== HATA RAPORU FORMATI ===\n")
-                    append("Kısa başlık (örneğin: 'Klavye tetiklenmiyor'):\n")
-                    append("Açıklama:\nLütfen meydana gelen sorunu detaylı şekilde anlatın.\n")
-                    append("Tekrar üretme adımları:\n1. \n2. \n3. \n")
-                    append("Beklenen davranış:\n(Ne olmalıydı?)\n")
-                    append("Gerçekleşen davranış:\n(Ne oldu?)\n")
-                    append("Cihaz bilgileri:\n- Model:\n- Android sürümü:\n- Uygulama sürümü:\n")
-                    append("Ek bilgiler, loglar ekte. Kişisel verileriniz raporlardan silinmiştir.\n")
-                    append("Bu raporu göndermeden önce kişisel bilgilerinizin çıkarıldığını ve paylaşıma izin verdiğinizi onaylıyorsunuz.\n")
+                    append(lang("=== BUG REPORT FORMAT ===\n","=== HATA RAPORU FORMATI ===\n"))
+                    append(lang("Short title (e.g. 'Keyboard not appearing'):\n","Kısa başlık (örneğin: 'Klavye tetiklenmiyor'):\n"))
+                    append(lang("Description:\nPlease detail what happened.\n","Açıklama:\nLütfen meydana gelen sorunu detaylı şekilde anlatın.\n"))
+                    append(lang("Steps to reproduce:\n1. \n2. \n3. \n","Tekrar üretme adımları:\n1. \n2. \n3. \n"))
+                    append(lang("Expected behavior:\n","Beklenen davranış:\n"))
+                    append(lang("Actual behavior:\n","Gerçekleşen davranış:\n"))
+                    append(lang("Device info:\n- Model:\n- Android version:\n- App version:\n","Cihaz bilgileri:\n- Model:\n- Android sürümü:\n- Uygulama sürümü:\n"))
+                    append(lang("Additional info, logs attached. Personal data has been removed.\n","Ek bilgiler, loglar ekte. Kişisel verileriniz raporlardan silinmiştir.\n"))
+                    append(lang("By sending this report you confirm the removal of personal data and consent to share non-personal information.\n","Bu raporu göndermeden önce kişisel bilgilerinizin çıkarıldığını ve paylaşıma izin verdiğinizi onaylıyorsunuz.\n"))
                 })
                 putExtra(Intent.EXTRA_STREAM, uri)
                 addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)

@@ -103,27 +103,44 @@ class MainActivity : AppCompatActivity() {
 
     private fun showPermissionUI(overlay: Boolean, accessibility: Boolean) {
         val prefs = getSharedPreferences("keyboard_trigger_prefs", MODE_PRIVATE)
+        fun lang(en: String, tr: String): String {
+            val l = prefs.getString("language", "en")
+            return if (l == "tr") tr else en
+        }
+        // theme preference may affect colors
+        val themePref = prefs.getString("theme","light") ?: "light"
+        val isDark = themePref == "dark"
+        val bgColor = if (isDark) Color.parseColor("#222222") else Color.parseColor("#F0F4F8")
+        val buttonBaseColor = if (isDark) Color.parseColor("#444444") else Color.parseColor("#FF2196F3")
+        val checkMarkColor = if (isDark) Color.parseColor("#bbbbff") else Color.parseColor("#a2bfff")
+
         val layout = LinearLayout(this).apply {
             orientation = LinearLayout.VERTICAL
             gravity = Gravity.CENTER
-            setBackgroundColor(Color.WHITE)
+            setBackgroundColor(bgColor)
             setPadding(30, 30, 30, 30)
         }
 
         // Add About button
         val btnAbout = Button(this).apply {
-            text = "Hakkında"
+            text = lang("About","Hakkında")
             setOnClickListener { startActivity(Intent(this@MainActivity, AboutActivity::class.java)) }
+            setBackgroundColor(buttonBaseColor)
+            setTextColor(if (isDark) Color.WHITE else Color.BLACK)
         }
         // License button (links to repo LICENSE URL)
         val btnLicenseMain = Button(this).apply {
             text = "LICENSE"
             setOnClickListener { startActivity(Intent(Intent.ACTION_VIEW, android.net.Uri.parse("https://github.com/universish/Keyboard..Trigger/blob/main/LICENSE"))) }
+            setBackgroundColor(buttonBaseColor)
+            setTextColor(if (isDark) Color.WHITE else Color.BLACK)
         }
         // Other licenses in-app
         val btnOtherLicensesMain = Button(this).apply {
-            text = "OTHER LICENSES FOR THE APP*"
+            text = lang("Other licenses","Diğer lisanslar")
             setOnClickListener { startActivity(Intent(this@MainActivity, LicensesActivity::class.java)) }
+            setBackgroundColor(buttonBaseColor)
+            setTextColor(if (isDark) Color.WHITE else Color.BLACK)
         }
         layout.addView(btnAbout)
         layout.addView(btnLicenseMain)
@@ -131,10 +148,10 @@ class MainActivity : AppCompatActivity() {
 
         val info = TextView(this).apply {
             text = buildString {
-                append("Uygulama çalışması için şu izinler gereklidir:\n\n")
-                append(if (!overlay) "• Üstte gösterme izni\n" else "")
-                append(if (!accessibility) "• Erişilebilirlik servisi (Keyboard Trigger)\n" else "")
-                append("\nLütfen izinleri verin, ardından geri dönün.")
+                append(lang("The following permissions are required for operation:\n\n","Uygulama çalışması için şu izinler gereklidir:\n\n"))
+                append(if (!overlay) lang("• Display over other apps\n","• Üstte gösterme izni\n") else "")
+                append(if (!accessibility) lang("• Accessibility service (Keyboard Trigger)\n","• Erişilebilirlik servisi (Keyboard Trigger)\n") else "")
+                append(lang("\nPlease grant permissions and return.","\nLütfen izinleri verin, ardından geri dönün."))
             }
             textSize = 16f
             setTextColor(Color.BLACK)
@@ -142,36 +159,36 @@ class MainActivity : AppCompatActivity() {
             setPadding(0, 0, 0, 20)
         }
 
-        // Overlay fallback has been removed for safety — show informational label instead
+        // Overlay fallback removed label is kept in code but hidden for now
         val overlayRemovedLabel = TextView(this).apply {
-            text = "Overlay fallback: Kaldırıldı (güvenlik nedeniyle)"
-            textSize = 14f
-            setTextColor(Color.DKGRAY)
-            setPadding(0, 10, 0, 10)
+            text = "Overlay fallback is disabled for security" // english default, not shown
+            visibility = TextView.GONE
         }
 
         // Selection bubble toggle
         val selectionSwitch = android.widget.Switch(this).apply {
-            text = "Seçim balonu (opsiyonel)"
+            text = lang("Selection bubble (optional)","Seçim balonu (opsiyonel)")
             isChecked = prefs.getBoolean("selection_bubble_enabled", false)
             setOnCheckedChangeListener { _, checked ->
                 prefs.edit().putBoolean("selection_bubble_enabled", checked).apply()
             }
             setPadding(0, 10, 0, 10)
+            setTextColor(if (isDark) Color.WHITE else Color.BLACK)
         }
 
         val btnOverlay = Button(this).apply {
             isEnabled = !overlay
             if (!overlay) {
-                text = "ÜSTTE GÖSTER İZNİ VER"
-                // default background
+                text = lang("GRANT OVERLAY","ÜSTTE GÖSTER İZNİ VER")
+                // default background uses theme
+                setBackgroundColor(buttonBaseColor)
             } else {
-                // show checkmark in custom color and bold, and set button background to #bbf3ae
-                val sb = android.text.SpannableStringBuilder("ÜSTTE GÖSTER İZNİ VERİLDİ ")
+                // show checkmark in custom color and bold, and set button background to accent
+                val sb = android.text.SpannableStringBuilder(lang("OVERLAY GRANTED ","ÜSTTE GÖSTER İZNİ VERİLDİ "))
                 val check = "✓"
                 val start = sb.length
                 sb.append(check)
-                sb.setSpan(android.text.style.ForegroundColorSpan(android.graphics.Color.parseColor("#a2bfff")), start, start+1, android.text.Spanned.SPAN_EXCLUSIVE_EXCLUSIVE)
+                sb.setSpan(android.text.style.ForegroundColorSpan(checkMarkColor), start, start+1, android.text.Spanned.SPAN_EXCLUSIVE_EXCLUSIVE)
                 sb.setSpan(android.text.style.StyleSpan(android.graphics.Typeface.BOLD), start, start+1, android.text.Spanned.SPAN_EXCLUSIVE_EXCLUSIVE)
                 text = sb
                 setBackgroundColor(android.graphics.Color.parseColor("#bbf3ae"))
@@ -181,13 +198,14 @@ class MainActivity : AppCompatActivity() {
         val btnAccess = Button(this).apply {
             isEnabled = !accessibility
             if (!accessibility) {
-                text = "ERİŞİLEBİLİRLİK İZNİ VER"
+                text = lang("ENABLE ACCESSIBILITY","ERİŞİLEBİLİRLİK İZNİ VER")
+                setBackgroundColor(buttonBaseColor)
             } else {
-                val sb = android.text.SpannableStringBuilder("ERİŞİLEBİLİRLİK AKTİF ")
+                val sb = android.text.SpannableStringBuilder(lang("ACCESSIBILITY ENABLED ","ERİŞİLEBİLİRLİK AKTİF "))
                 val check = "✓"
                 val start = sb.length
                 sb.append(check)
-                sb.setSpan(android.text.style.ForegroundColorSpan(android.graphics.Color.parseColor("#a2bfff")), start, start+1, android.text.Spanned.SPAN_EXCLUSIVE_EXCLUSIVE)
+                sb.setSpan(android.text.style.ForegroundColorSpan(checkMarkColor), start, start+1, android.text.Spanned.SPAN_EXCLUSIVE_EXCLUSIVE)
                 sb.setSpan(android.text.style.StyleSpan(android.graphics.Typeface.BOLD), start, start+1, android.text.Spanned.SPAN_EXCLUSIVE_EXCLUSIVE)
                 text = sb
                 setBackgroundColor(android.graphics.Color.parseColor("#bbf3ae"))
@@ -196,13 +214,15 @@ class MainActivity : AppCompatActivity() {
         }
 
         val btnDebug = Button(this).apply {
-            text = "Hata ayıkla"
+            text = lang("Debug issue","Hata ayıkla")
             setOnClickListener { startActivity(Intent(this@MainActivity, DebugActivity::class.java)) }
+            setBackgroundColor(buttonBaseColor)
+            setTextColor(if (isDark) Color.WHITE else Color.BLACK)
         }
 
         // Service control button shown in UI so user can start/stop manually
         val btnService = Button(this).apply {
-            text = "Servisi Başlat / Yeniden Başlat"
+            text = lang("Start / Restart service","Servisi Başlat / Yeniden Başlat")
             setOnClickListener {
                 val prefs = getSharedPreferences("keyboard_trigger_prefs", MODE_PRIVATE)
                 if (!overlay) Toast.makeText(this@MainActivity, "Lütfen önce Üstte Göster iznini verin", Toast.LENGTH_SHORT).show()
@@ -214,11 +234,13 @@ class MainActivity : AppCompatActivity() {
                     Toast.makeText(this@MainActivity, "Servis başlatıldı", Toast.LENGTH_SHORT).show()
                 }
             }
+            setBackgroundColor(buttonBaseColor)
+            setTextColor(if (isDark) Color.WHITE else Color.BLACK)
         }
 
         // Stop service button — allows immediate shutdown of floating service
         val btnStopService = Button(this).apply {
-            text = "Servisi Durdur"
+            text = lang("Stop service","Servisi Durdur")
             setOnClickListener {
                 try {
                     val prefs = getSharedPreferences("keyboard_trigger_prefs", MODE_PRIVATE)
@@ -231,14 +253,16 @@ class MainActivity : AppCompatActivity() {
                     Toast.makeText(this@MainActivity, "Servis durdurulamadı: ${e.message}", Toast.LENGTH_SHORT).show()
                 }
             }
+            setBackgroundColor(buttonBaseColor)
+            setTextColor(if (isDark) Color.WHITE else Color.BLACK)
         }
 
         // Status indicators
         val status = TextView(this).apply {
             text = buildString {
-                append(if (overlay) "Üstte gösterme: ✅\n" else "Üstte gösterme: ❌\n")
-                append(if (accessibility) "Erişilebilirlik: ✅\n" else "Erişilebilirlik: ❌\n")
-                append("Overlay fallback: Kaldırıldı (güvenlik)\n")
+                append(if (overlay) lang("Overlay: ✅\n","Üstte gösterme: ✅\n") else lang("Overlay: ❌\n","Üstte gösterme: ❌\n"))
+                append(if (accessibility) lang("Accessibility: ✅\n","Erişilebilirlik: ✅\n") else lang("Accessibility: ❌\n","Erişilebilirlik: ❌\n"))
+                // removed fallback message as it's always hidden
             }
             textSize = 14f
             setPadding(0, 10, 0, 10)
@@ -254,6 +278,73 @@ class MainActivity : AppCompatActivity() {
         layout.addView(btnService)
         layout.addView(btnStopService)
         layout.addView(btnDebug)
+        // language switch
+        // language selection: first show toggle button, then two choices
+        val btnLang = Button(this).apply {
+            text = lang("Language","Dil")
+            setBackgroundColor(buttonBaseColor)
+            setTextColor(if (isDark) Color.WHITE else Color.BLACK)
+        }
+        val btnLangTr = Button(this).apply {
+            text = "Türkçe"
+            visibility = TextView.GONE
+            setOnClickListener {
+                prefs.edit().putString("language","tr").apply()
+                recreate()
+            }
+            setBackgroundColor(buttonBaseColor)
+            setTextColor(if (isDark) Color.WHITE else Color.BLACK)
+        }
+        val btnLangEn = Button(this).apply {
+            text = "English"
+            visibility = TextView.GONE
+            setOnClickListener {
+                prefs.edit().putString("language","en").apply()
+                recreate()
+            }
+            setBackgroundColor(buttonBaseColor)
+            setTextColor(if (isDark) Color.WHITE else Color.BLACK)
+        }
+        btnLang.setOnClickListener {
+            btnLangTr.visibility = TextView.VISIBLE
+            btnLangEn.visibility = TextView.VISIBLE
+        }
+        layout.addView(btnLang)
+        layout.addView(btnLangTr)
+        layout.addView(btnLangEn)
+        // theme selector button
+        val btnTheme = Button(this).apply {
+            text = lang("Theme","Tema")
+            setBackgroundColor(buttonBaseColor)
+            setTextColor(if (isDark) Color.WHITE else Color.BLACK)
+        }
+        val btnThemeLight = Button(this).apply {
+            text = lang("Light","Açık")
+            visibility = TextView.GONE
+            setOnClickListener {
+                prefs.edit().putString("theme","light").apply()
+                recreate()
+            }
+            setBackgroundColor(buttonBaseColor)
+            setTextColor(if (isDark) Color.WHITE else Color.BLACK)
+        }
+        val btnThemeDark = Button(this).apply {
+            text = lang("Dark","Koyu")
+            visibility = TextView.GONE
+            setOnClickListener {
+                prefs.edit().putString("theme","dark").apply()
+                recreate()
+            }
+            setBackgroundColor(buttonBaseColor)
+            setTextColor(if (isDark) Color.WHITE else Color.BLACK)
+        }
+        btnTheme.setOnClickListener {
+            btnThemeLight.visibility = TextView.VISIBLE
+            btnThemeDark.visibility = TextView.VISIBLE
+        }
+        layout.addView(btnTheme)
+        layout.addView(btnThemeLight)
+        layout.addView(btnThemeDark)
         // Add main UI quick links
         layout.addView(btnAbout)
         layout.addView(btnLicenseMain)
