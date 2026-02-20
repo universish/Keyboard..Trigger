@@ -31,6 +31,8 @@ import android.os.Bundle
 import android.provider.Settings
 import android.util.Log
 import android.view.Gravity
+import android.os.Handler
+import android.os.Looper
 import android.view.accessibility.AccessibilityManager
 import android.accessibilityservice.AccessibilityServiceInfo
 import android.widget.Button
@@ -140,13 +142,11 @@ class MainActivity : AppCompatActivity() {
             setPadding(0, 0, 0, 20)
         }
 
-        // Overlay toggle
-        val overlaySwitch = android.widget.Switch(this).apply {
-            text = "Overlay fallback (opsiyonel)"
-            isChecked = prefs.getBoolean("overlay_fallback_enabled", true)
-            setOnCheckedChangeListener { _, checked ->
-                prefs.edit().putBoolean("overlay_fallback_enabled", checked).apply()
-            }
+        // Overlay fallback has been removed for safety — show informational label instead
+        val overlayRemovedLabel = TextView(this).apply {
+            text = "Overlay fallback: Kaldırıldı (güvenlik nedeniyle)"
+            textSize = 14f
+            setTextColor(Color.DKGRAY)
             setPadding(0, 10, 0, 10)
         }
 
@@ -196,19 +196,39 @@ class MainActivity : AppCompatActivity() {
         }
 
         val btnDebug = Button(this).apply {
-            text = "Hata raporu oluştur & paylaş"
-            setOnClickListener { createAndShareDebugReport() }
+            text = "Hata ayıkla"
+            setOnClickListener { startActivity(Intent(this@MainActivity, DebugActivity::class.java)) }
         }
 
         // Service control button shown in UI so user can start/stop manually
         val btnService = Button(this).apply {
             text = "Servisi Başlat / Yeniden Başlat"
             setOnClickListener {
+                val prefs = getSharedPreferences("keyboard_trigger_prefs", MODE_PRIVATE)
                 if (!overlay) Toast.makeText(this@MainActivity, "Lütfen önce Üstte Göster iznini verin", Toast.LENGTH_SHORT).show()
                 else if (!accessibility) Toast.makeText(this@MainActivity, "Lütfen önce Erişilebilirlik iznini verin", Toast.LENGTH_SHORT).show()
                 else {
+                    // persist that user explicitly enabled the service
+                    prefs.edit().putBoolean("service_enabled", true).apply()
                     startFloatingService()
                     Toast.makeText(this@MainActivity, "Servis başlatıldı", Toast.LENGTH_SHORT).show()
+                }
+            }
+        }
+
+        // Stop service button — allows immediate shutdown of floating service
+        val btnStopService = Button(this).apply {
+            text = "Servisi Durdur"
+            setOnClickListener {
+                try {
+                    val prefs = getSharedPreferences("keyboard_trigger_prefs", MODE_PRIVATE)
+                    prefs.edit().putBoolean("service_enabled", false).apply()
+
+                    val intent = Intent().apply { setClassName(this@MainActivity, "com.universish.libre.keyboardtrigger.FloatingService") }
+                    stopService(intent)
+                    Toast.makeText(this@MainActivity, "Servis durduruldu", Toast.LENGTH_SHORT).show()
+                } catch (e: Exception) {
+                    Toast.makeText(this@MainActivity, "Servis durdurulamadı: ${e.message}", Toast.LENGTH_SHORT).show()
                 }
             }
         }
@@ -218,7 +238,7 @@ class MainActivity : AppCompatActivity() {
             text = buildString {
                 append(if (overlay) "Üstte gösterme: ✅\n" else "Üstte gösterme: ❌\n")
                 append(if (accessibility) "Erişilebilirlik: ✅\n" else "Erişilebilirlik: ❌\n")
-                append("Overlay fallback: " + if (overlaySwitch.isChecked) "Açık" else "Kapalı")
+                append("Overlay fallback: Kaldırıldı (güvenlik)\n")
             }
             textSize = 14f
             setPadding(0, 10, 0, 10)
@@ -227,11 +247,12 @@ class MainActivity : AppCompatActivity() {
         layout.removeAllViews()
         layout.addView(info)
         layout.addView(status)
-        layout.addView(overlaySwitch)
+        layout.addView(overlayRemovedLabel)
         layout.addView(selectionSwitch)
         layout.addView(btnOverlay)
         layout.addView(btnAccess)
         layout.addView(btnService)
+        layout.addView(btnStopService)
         layout.addView(btnDebug)
         // Add main UI quick links
         layout.addView(btnAbout)
@@ -260,7 +281,7 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun createAndShareDebugReport() {
-        // Generate a sanitized log report and prompt user to share via email
+        // Generate a sanitized log report, include a GitHub-style issue template and prompt user to share via email
         Thread {
             try {
                 val pkg = packageName
@@ -282,7 +303,25 @@ class MainActivity : AppCompatActivity() {
                 val ts = java.time.format.DateTimeFormatter.ofPattern("yyyyMMdd_HHmmss").format(java.time.LocalDateTime.now())
                 val fname = "keyboard_trigger_report_$ts.txt"
                 val f = java.io.File(cacheDir, fname)
-                f.writeText("Keyboard Trigger Debug Report\nTime: $ts\nPackage: $pkg\n\n--- LOGS ---\n\n" + sanitized)
+
+                // Prepend an issue-report template so the attached file and the email body guide the user
+                val issueTemplate = buildString {
+                    append("Kısa başlık (örn. 'Butona basınca klavye açılıyor, metin yazılamıyor'):\n")
+                    append("\n**Açıklama**\n(Ne oluyor? Kısa ve öz yazın)\n\n")
+                    append("**Tekrar üretme adımları**\n1. \n2. \n3. \n\n")
+                    append("**Beklenen davranış**\n- \n\n")
+                    append("**Gerçekleşen davranış**\n- \n\n")
+                    append("**Ekran görüntüleri / ekran kaydı**\n(Lütfen gerekli yerleri ekleyin)\n\n")
+                    append("**Cihaz bilgileri**\n- Model: \n- Android sürümü: \n- Uygulama sürümü: \n\n")
+                    append("**Ek bilgiler / Loglar**\n(Lütfen varsa ek notlar)\n\n")
+                    append("--- OTOMATİK EKLENEN ÖZET (lütfen düzenleyin) ---\n")
+                    append("• Butona basınca klavye geliyor; metin editörüne yazı yazılamıyor. Android'de bozulma oluşuyor; normal klavye açılımıyla da yazılamıyor.\n")
+                    append("• Açık uygulamalar butonuna basınca uygulamalar listeleniyor; herhangi bir uygulamaya dokununca uygulamanın GUI'si tam ekran açılmalı ama klavye açılıyor. Uygulama ekranı tam açılmıyor.\n")
+                    append("• Klavye, klavye açılmaması gereken yerlerde açılıyor; bazen butona basmasam da açılıyor. Bir yere dokununca metin kutusu olmasa da klavye açılıyor.\n\n")
+                    append("(Lütfen yukarıdaki alanları doldurun; ekran görüntülerini ekleyin. Oluşturulan log dosyası ektedir.)\n")
+                }
+
+                f.writeText("Keyboard Trigger Debug Report\nTime: $ts\nPackage: $pkg\n\n--- ISSUE TEMPLATE ---\n\n" + issueTemplate + "\n--- LOGS ---\n\n" + sanitized)
 
                 // Ask user to share via email
                 runOnUiThread {
@@ -293,14 +332,18 @@ class MainActivity : AppCompatActivity() {
                         try {
                             // use FileProvider
                             val uri = androidx.core.content.FileProvider.getUriForFile(this, "$packageName.fileprovider", f)
-                            val i = Intent(Intent.ACTION_SEND).apply {
-                                type = "text/plain"
-                                putExtra(Intent.EXTRA_SUBJECT, "Keyboard Trigger Debug Report")
-                                putExtra(Intent.EXTRA_TEXT, "Lütfen hata raporunu inceleyin.")
+
+                            // prefill email: recipient, subject and body (issue template)
+                            val emailIntent = Intent(Intent.ACTION_SEND).apply {
+                                type = "message/rfc822"
+                                putExtra(Intent.EXTRA_EMAIL, arrayOf("universish@tutamail.com"))
+                                putExtra(Intent.EXTRA_SUBJECT, "[Hata Raporu] Keyboard Trigger — kısa başlık ekleyin")
+                                putExtra(Intent.EXTRA_TEXT, issueTemplate)
                                 putExtra(Intent.EXTRA_STREAM, uri)
                                 addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
                             }
-                            startActivity(Intent.createChooser(i, "Hata raporunu paylaş"))
+
+                            startActivity(Intent.createChooser(emailIntent, "Hata raporunu paylaş"))
                         } catch (e: Exception) {
                             Toast.makeText(this, "E-posta açılamadı: ${e.message}", Toast.LENGTH_SHORT).show()
                         }
@@ -317,15 +360,40 @@ class MainActivity : AppCompatActivity() {
 
     private fun startFloatingService() {
         Log.e("MainActivity", "startFloatingService called")
+        val prefs = getSharedPreferences("keyboard_trigger_prefs", MODE_PRIVATE)
+        val now = System.currentTimeMillis()
+        val last = prefs.getLong("last_service_start_ts", 0L)
+        // debounce rapid repeated start requests (prevents OS timeout race)
+        if (now - last < 2000) {
+            Log.e("MainActivity", "startFloatingService suppressed: debounced (delta=${'$'}{now-last}ms)")
+            return
+        }
+        prefs.edit().putLong("last_service_start_ts", now).apply()
+
         val intent = Intent().apply {
             setClassName(this@MainActivity, "com.universish.libre.keyboardtrigger.FloatingService")
         }
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            startForegroundService(intent)
-        } else {
-            startService(intent)
+
+        try {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                startForegroundService(intent)
+            } else {
+                startService(intent)
+            }
+        } catch (e: Exception) {
+            // defensive: schedule a short retry instead of crashing the Activity
+            Log.e("MainActivity", "startForegroundService failed, scheduling retry: ${'$'}{e.message}")
+            Handler(Looper.getMainLooper()).postDelayed({
+                try {
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) startForegroundService(intent) else startService(intent)
+                } catch (_: Exception) {}
+            }, 500)
         }
-        finish()
+
+        // instead of calling finish(), just move the task to the background so
+        // an activity instance lives on. this keeps a proper entry and screenshot
+        // in Recents, and allows tapping the tile to reopen the UI later.
+        moveTaskToBack(true)
     }
 
     private fun createNotificationChannel() {

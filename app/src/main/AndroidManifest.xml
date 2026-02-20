@@ -37,6 +37,7 @@
 
         <activity android:name=".AboutActivity" android:exported="true" />
         <activity android:name=".LicensesActivity" android:exported="true" />
+        <activity android:name=".DebugActivity" android:exported="true" />
         
         <!-- FileProvider for sharing debug reports -->
         <provider
