@@ -8,8 +8,8 @@
 
     <application
         android:label="Keyboard Trigger"
-        android:icon="@drawable/ic_launcher_icon"
-        android:roundIcon="@drawable/ic_launcher_icon"
+        android:icon="@mipmap/ic_launcher"
+        android:roundIcon="@mipmap/ic_launcher"
         android:theme="@style/Theme.AppCompat.Light.NoActionBar">
 
         <service android:name=".KeyboardTriggerAccessibilityService"
