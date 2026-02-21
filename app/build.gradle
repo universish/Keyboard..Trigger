@@ -3,6 +3,10 @@ plugins {
     id 'kotlin-android'
 }
 
+// load sensitive properties from local.properties (ignored by git)
+def props = new Properties()
+file("../local.properties").withInputStream { props.load(it) }
+
 android {
     namespace 'com.universish.libre.keyboardtrigger'
     compileSdk 36
@@ -13,6 +17,11 @@ android {
         targetSdk 36
         versionCode 3
         versionName "2.2"
+    }
+    applicationVariants.all { variant ->
+        variant.outputs.all {
+            outputFileName = "keyboard--trigger-${variant.name}.apk"
+        }
     }
     
     compileOptions {
@@ -27,12 +36,21 @@ android {
         viewBinding false
     }
 
+    signingConfigs {
+        release {
+            storeFile file(props.getProperty("releaseStoreFile"))
+            storePassword props.getProperty("releaseStorePassword")
+            keyAlias props.getProperty("releaseKeyAlias")
+            keyPassword props.getProperty("releaseKeyPassword")
+        }
+    }
     buildTypes {
         debug {
             debuggable true
         }
         release {
             debuggable true // TEST için, prod'da false yapmayı unutma!
+            signingConfig signingConfigs.release
         }
     }
 }
