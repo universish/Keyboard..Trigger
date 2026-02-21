@@ -1,19 +1,81 @@
+# IDE files
 *.iml
-.gradle
-/local.properties
 /.idea
 .DS_Store
+
+# Android build artifacts
 /build
 /captures
 .externalNativeBuild
 .cxx
+
+# local configuration (not for repo)
+/local.properties
 local.properties
-*.apk
+/gradle.properties
+/gradle-wrapper.properties
+
+# key stores and sensitive files
+/release-keystore.jks
+*debug.keystore
+*.keystore
+*.jks
+
+# logs and temporary
 *.log
 *.txt
 *.backup
-sor.py
-derle_cepte.sh
+*.py
+*.sh
+*.bat
+*.cmd
+*.ps1
+*hata*
+*error*
+*HATA*
+*ERROR*
+
+# APKs and related packages
+*.apk
+*.ap_
+*.apks
+
+# compressed archives
+*.tar
+*.tar.gz
+*.tgz
+*.tar.bz2
+*.tar.xz
+*.zip
+*.gz
+*.7z
+*.rar
+*.xz
+*.bz2
+*.backup.tar.gz
+*.backup.tar
+*.mp4
+*.mkv
+*.avi
+*.mov
+*.mp3
+*.wav
+*.flac
+*.ogg
+*.iso
+*.img
+*.bak
+*.backup
+*.tmp
+*.swp
+*.swo
+*.log.*
+*.log-*
+*.m4a
+*.flv
+
+# global gradle cache & config
+/.gradle/
 
 # Compressed archives and backups
 *.tar
@@ -29,3 +91,23 @@ derle_cepte.sh
 *.bz2
 *.backup.tar.gz
 *.backup.tar
+*.mp4
+*.mkv
+*.avi
+*.mov
+*.mp3
+*.wav
+*.flac
+*.ogg
+*.iso
+*.img
+*.bak
+*.backup
+*.tmp
+*.swp
+*.swo
+*.log
+*.log.*
+*.log-*
+*.m4a
+*.flv
