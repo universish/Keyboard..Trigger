@@ -5,7 +5,13 @@ plugins {
 
 // load sensitive properties from local.properties (ignored by git)
 def props = new Properties()
-file("../local.properties").withInputStream { props.load(it) }
+def localPropsFile = file("../local.properties")
+if (localPropsFile.exists()) {
+    localPropsFile.withInputStream { props.load(it) }
+} else {
+    // running in CI or clean checkout; just continue without errors
+    println "[INFO] no local.properties found (CI or fresh clone)"
+}
 
 android {
     namespace 'com.universish.libre.keyboardtrigger'
@@ -38,10 +44,11 @@ android {
 
     signingConfigs {
         release {
-            storeFile file(props.getProperty("releaseStoreFile"))
-            storePassword props.getProperty("releaseStorePassword")
-            keyAlias props.getProperty("releaseKeyAlias")
-            keyPassword props.getProperty("releaseKeyPassword")
+                // fallback to empty string if missing; real build should supply via local.properties
+            storeFile file(props.getProperty("releaseStoreFile") ?: "release-keystore.jks")
+            storePassword props.getProperty("releaseStorePassword") ?: ""
+            keyAlias props.getProperty("releaseKeyAlias") ?: ""
+            keyPassword props.getProperty("releaseKeyPassword") ?: ""
         }
     }
     buildTypes {
