@@ -27,9 +27,16 @@ Before submitting an issue or pull request, please verify that your change build
 
 ## Reporting bugs
 
-1. Search existing issues first—your problem may already be known.
-2. Open a new issue with a clear title and steps to reproduce.
-3. Include device model, Android version, and any log output (logs are sanitized automatically).
+This project prefers to handle problem reports via email rather than GitHub
+issues.  The built‑in debug tool (see the README) lets you capture a sanitized
+log that you can inspect before sending; the app then composes an email with
+that log attached.  Please use that mechanism so that any sensitive information
+remains private.
+
+1. Do **not** create a GitHub issue for a bug unless instructed otherwise.
+2. Use the app’s export‑and‑send feature to deliver your report.
+3. When emailing, include device model, Android version, and a short
+   reproduction sequence.
 
 ## Submitting patches
 

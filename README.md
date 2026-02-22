@@ -75,6 +75,34 @@ accessibility window appears instead of a system overlay.  It still works the
 same way, and the app will show a warning in the settings screen if you are in
 fallback mode.
 
+### Themes & Language
+
+- **Theme**: Tap the "Theme" control in the settings panel to choose light or
+  dark mode.  The floating button, notification, and UI elements adopt the
+  selected theme immediately.
+- **Language**: Tap "Language" then pick either English or Türkçe; the labels,
+  instructions and on‑screen text are reloaded in the chosen language without
+  restarting the app.
+
+### Debugging & Privacy
+
+A built‑in debug tool lets you generate a sanitized log file.  To use it:
+
+1. Open **Debug → Start debug session** and follow the on‑screen instructions.
+2. Reproduce the issue you’re seeing while the session records information.
+3. When finished, tap **Export logs**.  The exported file automatically strips
+   emails, phone numbers, and long tokens to protect your privacy.
+4. You may review the file yourself to confirm no personal data remains.
+5. If you approve, tap **Send report** – an email draft will open with the
+   log attached and a template you can edit.
+
+> **Important:** Please do **not** open an issue on GitHub for bug reports.
+> Instead, use the email report feature above so that sensitive details stay
+> between you and the developer.
+
+This process keeps all debugging information local until you consent to share
+it, aligning with the project’s privacy‑first philosophy.
+
 ### Troubleshooting
 
 - If the button disappears after a reboot, open the main app and press
