@@ -8,11 +8,13 @@
 /captures
 .externalNativeBuild
 .cxx
+# Build klasörlerini yoksay (hem normal hem olası yollar)
 build/
 bin/
 gen/
-/bin
-/gen
+obj/
+*.aar
+/obj/
 
 # APK ve diğer çıktıları yoksay
 *.apk
