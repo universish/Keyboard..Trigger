@@ -29,15 +29,65 @@ cd Keyboard__Trigger
 
 ---
 
-## 📱 Usage Guide
+## 📱 Detailed Usage Guide
 
-1. Open **Settings → Accessibility** and enable **Keyboard Trigger**.
-2. Grant overlay permission when prompted (or opt‑in to the fallback mode).
-3. Drag the floating button to any screen edge and tap to summon the keyboard.
-4. To reposition, long‑press and drag.
-5. Toggle the selection bubble from the settings panel if desired.
+The core of Keyboard Trigger is the little floating button that lives at the
+edge of your screen.  It can be placed on any side (left, right, top or bottom)
+and it behaves like a sticky handle: once you tap it the soft keyboard instantly
+appears, no matter which app or screen you are looking at.
 
-This button works everywhere – homescreen, games, other apps – without stealing focus or spying on your input.
+### First‑time setup
+
+1. Open **Settings → Accessibility** and enable **Keyboard Trigger**.  This
+   grants the service permission to monitor window changes and display the
+   keyboard on demand.
+2. When you run the app it will ask for **display over other apps** permission.
+   Grant it; if the system refuses you will be offered the security‑safe
+   fallback (an invisible accessibility overlay).
+3. Optionally enable the small **selection bubble** in the settings.  When
+   enabled, tapping the button briefly shows a confirmation circle to reduce
+   accidental taps.
+
+### Positioning the button
+
+- After installation the button appears at the left edge by default.
+- **Reposition**: long–press and drag it anywhere along the edge or to another
+  edge.  Release to stick it in place.
+- **Hide / show**: use the notification that the service posts, or open the
+  main app and toggle the visibility control.
+- **Appearance**: the button’s colour and size are fixed for now; future
+  versions may add themes.
+
+### Using the button
+
+1. Touch the floating button once.  If the keyboard was hidden, it will pop up
+over whatever app you are currently using.
+2. If the keyboard is already visible, tapping the button again has no effect
+   (this prevents interference with standard typing).
+3. To dismiss the keyboard, use the normal back gesture or tap the keyboard’s
+   hide key; the button does not interfere.
+
+### Fallback mode (no overlay)
+
+Some devices or launchers block drawing over other apps.  In that case the
+button will still appear but with slightly different behaviour: a tiny
+accessibility window appears instead of a system overlay.  It still works the
+same way, and the app will show a warning in the settings screen if you are in
+fallback mode.
+
+### Troubleshooting
+
+- If the button disappears after a reboot, open the main app and press
+  "Start / Restart service".
+- If you cannot grant overlay permission, enable the fallback and reinstall the
+  app.
+- For detailed logs see **Debug → Export Logs**; they are sanitized and can be
+  emailed to the developer.
+
+This persistent, lightweight button allows you to summon the keyboard without
+changing focus, opening notifications, or touching text fields.  It works
+across the system – launcher, games, lock screen (if allowed) – and is safe
+for sensitive input because it never records or transmits what you type.
 
 ---
 
@@ -79,8 +129,18 @@ The repository is tagged with keywords to help others discover it: android, kotl
 
 ---
 
-**Developer:** universish (Saffet Yavuz)
+**Developer:** universish (S____t Y___z)
+
+---
+
+## 🏷️Keywords
+
+android, kotlin, keyboard, android-development, android-app, androiddevelopment, androidapp, androidapplication, android-application, keyboards, keyboard-shortcuts, keymapping, accessibilityservice, keymapper, android-accessibility, keyevent, privacy-focused, free-libre-oss, input-method, trigger, keyboard-trigger, keyboard-invoker, keyboard-launcher, bring_out_the_keyboard, reveal_the_keyboard, keyboard-widget, accessibility, keyboard-layout, keyboard-button, keyboard-trigger-button, input, without-tracker, keyboardmapper, keyboardmapping, keyboard-mapper, keyboard-mapping, keyboard-bringing, keyboard-invoking, keyboard-revealing, assistivetouch, Assistive-Touch, trigger-button, keyboard-bringer, keyboard-invoker, keyboard-exposer, keyboard-bringer, button, trigger, keytrigger, keybutton, keyboardbutton, keyboard-button
+
 
 Happy typing! 🎹
+
+
+
 
 
