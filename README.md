@@ -86,6 +86,8 @@ fallback mode.
 
 ### Debugging & Privacy
 
+**🐛 Reporting Bugs**
+
 A built‑in debug tool lets you generate a sanitized log file.  To use it:
 
 1. Open **Debug → Start debug session** and follow the on‑screen instructions.
@@ -127,18 +129,6 @@ Because the app uses Android's accessibility service, it requires the correspond
 
 ---
 
-## 🐛 Reporting Bugs
-
-If you find a problem or have a suggestion:
-
-1. Open an issue at [GitHub Issues](https://github.com/universish/Keyboard..Trigger/issues).
-2. Provide your device model, Android version, and a short reproduction sequence.
-3. Attach logs if possible (see **Debug → Export Logs** in the app).
-
-Debug reports are sanitized before sharing; personal information is automatically removed.
-
----
-
 ## 🤝 Contributing
 
 See [CONTRIBUTING.md](CONTRIBUTING.md) for guidelines on building, testing, and sending patches.
@@ -157,7 +147,7 @@ The repository is tagged with keywords to help others discover it: android, kotl
 
 ---
 
-**Developer:** universish (S____t Y___z)
+**Developer:** universish (`S****t Y****z`)
 
 ---
 
