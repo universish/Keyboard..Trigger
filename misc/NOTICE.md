@@ -50,3 +50,8 @@ See LICENSE (GPLv3) and the in-app Licenses page for details.
 
 	    **Electronic Mail:**
 	    universish@tutamail.com
+
+    ## Keywords
+
+android, kotlin, keyboard, android-development, android-app, androiddevelopment, androidapp, androidapplication, android-application, keyboards, keyboard-shortcuts, keymapping, accessibilityservice, keymapper, android-accessibility, keyevent, privacy-focused, free-libre-oss, input-method, trigger, keyboard-trigger, keyboard-invoker, keyboard-launcher, bring_out_the_keyboard, reveal_the_keyboard, keyboard-widget, accessibility, keyboard-layout, keyboard-button, keyboard-trigger-button, input, without-tracker, keyboardmapper, keyboardmapping, keyboard-mapper, keyboard-mapping, keyboard-bringing, keyboard-invoking, keyboard-revealing, assistivetouch, Assistive-Touch, trigger-button, keyboard-bringer, keyboard-invoker, keyboard-exposer, keyboard-bringer, button, trigger, keytrigger, keybutton, keyboardbutton, keyboard-button
+
