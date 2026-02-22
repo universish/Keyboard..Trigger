@@ -8,7 +8,16 @@
 /captures
 .externalNativeBuild
 .cxx
+build/
+bin/
+gen/
+/bin
+/gen
 
+# APK ve diğer çıktıları yoksay
+*.apk
+*.aar
+*.jks
 # local configuration (not for repo)
 /local.properties
 local.properties
